@@ -1,4 +1,4 @@
-# gt-demo
+# genshin-ts-element_odyssey
 
 This is a Genshin-TS project template. You can write logic in TypeScript, compile it into a node graph, and inject it into a map.
 
@@ -39,6 +39,7 @@ export default config
 ```
 
 Notes:
+
 - `npm run maps` lists recently saved maps to help locate `mapId`.
 - Fill `gameRegion` / `playerId` when you have multiple regions/accounts.
 - Injection automatically creates backups for rollback.
@@ -55,6 +56,7 @@ g.server({ id: 1073741825 }).on('whenEntityIsCreated', (_evt, f) => {
 ```
 
 Key points:
+
 - `id` is the target NodeGraph ID; entries with the same ID are merged.
 - Event names use string literals (Chinese aliases are supported).
 - `f` is the node graph function entry; use it for output and variables.
@@ -63,6 +65,7 @@ Key points:
 ## g.server Options (Injection Safety)
 
 Common options:
+
 - `id`: target NodeGraph ID (injection must match this ID).
 - `name`: graph display name; defaults to entry filename.
 - `prefix`: auto add `_GSTS_` prefix (default true).
@@ -71,6 +74,7 @@ Common options:
 - `lang`: set `'zh'` to enable Chinese event names and function aliases.
 
 Injection safety rules:
+
 - The target `id` must exist in the map.
 - The target graph must be empty or its name must start with `_GSTS`, otherwise injection is blocked.
 - If you know what you are doing, set `inject.skipSafeCheck = true` in `gsts.config.ts`.
@@ -80,6 +84,7 @@ Injection safety rules:
 ## gsts.config Optimize Options (Enabled by Default)
 
 `gsts.config.ts` uses `options.optimize` with all defaults on:
+
 - `precompileExpression`: precompute literal-only expressions.
 - `removeUnusedNodes`: remove unused exec/data nodes.
 - `timerPool`: name pool size for `setTimeout` / `setInterval`.
@@ -115,11 +120,13 @@ Disable an option temporarily if you need to debug or compare graphs.
 ### Global Functions and Variables Cheat Sheet (Preferred for AI)
 
 Logging and debug:
+
 - `print(str(...))`: most stable logging.
 - `console.log(x)`: **single argument only**, auto-rewritten to `print(str(...))`.
 - `f.printString(...)`: explicit node call for strict graph alignment.
 
 Type helpers:
+
 - `bool(...)` / `int(...)` / `float(...)` / `str(...)`
 - `vec3(...)` / `guid(...)` / `prefabId(...)` / `configId(...)` / `faction(...)` / `entity(...)`
 - `list('int', items)`: explicit list typing (critical for empty arrays).
@@ -127,22 +134,27 @@ Type helpers:
 - `raw(...)`: compiler ignores it; JS native semantics apply.
 
 Entities and scene:
+
 - `player(1)`: player entity (starts from 1).
 - `stage` / `level`: stage entity aliases.
 - `self`: current graph entity.
 - `GameObject.Find(...)` / `FindWithTag(...)` / `FindByPrefabId(...)`
 
 Math and vectors:
+
 - `Math.*`: compiled to node graph equivalents in server scope.
 - `Mathf.*` / `Vector3.*` / `Random.*`: Unity-style APIs.
 
 Signals and events:
+
 - `send('signalName')` with `g.server().onSignal(...)`.
 
 Timers:
+
 - `setTimeout` / `setInterval` / `clearTimeout` / `clearInterval`.
 
 Common methods:
+
 - Many array/string methods (`map`/`filter`/`find`/`length`) are supported; rely on type hints.
 
 ### Node Graph Variables (Writable)
@@ -159,6 +171,7 @@ g.server({
 ```
 
 Notes:
+
 - `variables` defines graph variables and enables typed `f.get` / `f.set`.
 - Entity variables are type declarations only (use `entity(0)`).
 - `entity(0)` can also be used as a placeholder to keep entity params empty in the editor.
@@ -192,6 +205,7 @@ g.server({ id: 1073741825 }).on('whenEntityIsCreated', (_evt, f) => {
 ```
 
 Rules:
+
 - Must be top-level; params must be identifiers (no destructuring/default/rest).
 - Only a trailing single `return` is allowed.
 - Calls only allowed inside `g.server().on(...)` or another `gstsServer*`.
@@ -228,6 +242,7 @@ Rules:
 - `npm run lint`: ESLint
 
 Notes:
+
 - The project includes custom ESLint rules; run `npm run lint` often to catch hidden constraints.
 - `npm run typecheck` helps catch type issues before compile errors.
 - `npm run dev` runs `gsts dev` watch mode only.
@@ -244,5 +259,6 @@ Notes:
 ## Looking Up Function Notes (AI Friendly)
 
 When type hints are not enough, search in `node_modules/genshin-ts`:
+
 - Node functions and event definitions: `node_modules/genshin-ts/dist/src/definitions/`
 - Use keywords (event name, function name, Chinese alias) to locate comments and params.

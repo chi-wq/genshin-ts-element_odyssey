@@ -1,4 +1,4 @@
-# gt-demo
+# genshin-ts-element_odyssey
 
 这是一个基于 genshin-ts 的千星奇域项目模板。你可以用 TypeScript 写逻辑，编译为节点图并注入到地图。
 
@@ -84,6 +84,7 @@ g.server({ id: 1073741825 }).on('whenEntityIsCreated', (_evt, f) => {
 ## gsts.config 优化配置（默认启用）
 
 `gsts.config.ts` 的 `options.optimize` 默认全开，常见项：
+
 - `precompileExpression`：预编译纯字面量表达式，减少运行期节点计算。
 - `removeUnusedNodes`：清理未接入事件或未被使用的节点。
 - `timerPool`：控制 `setTimeout` / `setInterval` 的定时器名称池大小。
