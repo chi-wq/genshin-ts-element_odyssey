@@ -1,24 +1,24 @@
 # genshin-ts-element_odyssey
 
-This is a Genshin-TS project template. You can write logic in TypeScript, compile it into a node graph, and inject it into a map.
+これは [Genshin-TS](https://gsts.moe) を使って作ったゲームプロジェクトです。TypeScript でロジックを書き、ノードグラフにコンパイルしてマップへ注入できます。
 
-## Quick Start
+## クイックスタート
 
 ```bash
 npm install
 npm run dev
 ```
 
-Docs: `https://gsts.moe`
+ドキュメント: `https://gsts.moe`
 
-## Project Layout
+## プロジェクト構成
 
-- `src/main.ts`: entry example (`g.server(...).on(...)`)
-- `gsts.config.ts`: compile/output configuration
-- `dist/`: build outputs (`.gs.ts` / `.json` / `.gia`)
-- `CLAUDE.md` / `AGENTS.md`: AI collaboration notes (read first)
+- `src/main.ts`: エントリ例（`g.server(...).on(...)`）
+- `gsts.config.ts`: コンパイル/出力の設定
+- `dist/`: ビルド出力（`.gs.ts` / `.json` / `.gia`）
+- `CLAUDE.md` / `AGENTS.md`: AI 協業メモ（先に読む）
 
-## Injection Config Example (Optional)
+## 注入（Injection）設定例（任意）
 
 ```ts
 import type { GstsConfig } from 'genshin-ts'
@@ -28,7 +28,7 @@ const config: GstsConfig = {
   entries: ['./src'],
   outDir: './dist',
   inject: {
-    gameRegion: 'China',
+    gameRegion: 'Global',
     playerId: 1,
     mapId: 1073741849,
     nodeGraphId: 1073741825
@@ -38,13 +38,13 @@ const config: GstsConfig = {
 export default config
 ```
 
-Notes:
+メモ:
 
-- `npm run maps` lists recently saved maps to help locate `mapId`.
-- Fill `gameRegion` / `playerId` when you have multiple regions/accounts.
-- Injection automatically creates backups for rollback.
+- `npm run maps` は最近保存したマップを列挙し、`mapId` 特定の助けになります。
+- 複数リージョン/複数アカウントを使う場合は `gameRegion` / `playerId` を埋めてください。
+- 注入時にロールバック用バックアップが自動作成されます。
 
-## Entry and Event Style
+## エントリとイベントの書き方
 
 ```ts
 import { g } from 'genshin-ts/runtime/core'
@@ -55,77 +55,76 @@ g.server({ id: 1073741825 }).on('whenEntityIsCreated', (_evt, f) => {
 })
 ```
 
-Key points:
+ポイント:
 
-- `id` is the target NodeGraph ID; entries with the same ID are merged.
-- Event names use string literals (Chinese aliases are supported).
-- `f` is the node graph function entry; use it for output and variables.
-- You can chain multiple events: `g.server(...).on(...).onSignal(...)`.
+- `id` は注入対象の NodeGraph ID です。同一 ID のエントリはマージされます。
+- イベント名は文字列リテラルで指定します。
+- `f` はノードグラフ関数のエントリです。出力や変数操作に使います。
+- `g.server(...).on(...).onSignal(...)` のようにイベントをチェーンできます。
 
-## g.server Options (Injection Safety)
+## g.server のオプション（注入安全性）
 
-Common options:
+よく使うオプション:
 
-- `id`: target NodeGraph ID (injection must match this ID).
-- `name`: graph display name; defaults to entry filename.
-- `prefix`: auto add `_GSTS_` prefix (default true).
-- `type`: graph type (default server/entity).
-- `variables`: declare graph variables and enable `f.get` / `f.set`.
-- `lang`: set `'zh'` to enable Chinese event names and function aliases.
+- `id`: 注入対象の NodeGraph ID（注入設定はこの ID と一致させる必要があります）
+- `name`: グラフ表示名（デフォルトはエントリファイル名）
+- `prefix`: `_GSTS_` プレフィックスを自動付与（デフォルト true）
+- `type`: グラフタイプ（デフォルト server/entity）
+- `variables`: グラフ変数を宣言し、`f.get` / `f.set` を有効化
 
-Injection safety rules:
+注入の安全ルール:
 
-- The target `id` must exist in the map.
-- The target graph must be empty or its name must start with `_GSTS`, otherwise injection is blocked.
-- If you know what you are doing, set `inject.skipSafeCheck = true` in `gsts.config.ts`.
-- After creating a new graph, you must save the map for the injector to detect the `id`.
-- Recommended: create and save a batch of graphs first, then compile/inject once.
+- 対象 `id` はマップ内に存在している必要があります。
+- 対象グラフが空、または名前が `_GSTS` で始まらない場合は注入がブロックされます。
+- 仕様を理解している場合は `gsts.config.ts` で `inject.skipSafeCheck = true` を設定できます。
+- 新しいグラフを作成したら、インジェクタが `id` を検出できるようにマップを保存してください。
+- 推奨: 先にグラフをまとめて作成・保存し、その後に 1 回だけコンパイル/注入します。
 
-## gsts.config Optimize Options (Enabled by Default)
+## gsts.config の最適化オプション（デフォルト有効）
 
-`gsts.config.ts` uses `options.optimize` with all defaults on:
+`gsts.config.ts` は `options.optimize` を使用し、デフォルトではすべて有効です:
 
-- `precompileExpression`: precompute literal-only expressions.
-- `removeUnusedNodes`: remove unused exec/data nodes.
-- `timerPool`: name pool size for `setTimeout` / `setInterval`.
-- `timerDispatchAggregate`: aggregate timer dispatch to reduce complexity.
+- `precompileExpression`: リテラルのみで構成された式を事前計算
+- `removeUnusedNodes`: 未使用の exec/data ノードを削除
+- `timerPool`: `setTimeout` / `setInterval` の名前プールサイズ
+- `timerDispatchAggregate`: タイマー dispatch を集約して複雑度を削減
 
-Disable an option temporarily if you need to debug or compare graphs.
+デバッグやグラフ比較が必要な場合は、必要に応じて一時的に無効化してください。
 
-## Typical Usage and Constraints (AI Must Read)
+## 典型的な使い方と制約（AI は必読）
 
-### Scope Split
+### スコープ分離
 
-- **Top-level scope (compile-time)**: OK to read files, use npm libs, precompute data; do not call `g.server` or `gsts` runtime APIs here.
-- **Node graph scope (runtime)**: only a supported TS subset; logic is compiled into node graphs.
+- **トップレベル（コンパイル時）**: ファイル読み込み、npm ライブラリ使用、事前計算は OK。ただしここで `g.server` や `gsts` のランタイム API を呼ばないでください。
+- **ノードグラフ（実行時）**: 対応している TS のサブセットのみ使用可。ここで書いたロジックがノードグラフへコンパイルされます。
 
-### Control Flow and Returns
+### 制御構文と return
 
-- `if/while/switch` conditions must be `boolean`; use `bool(...)` if needed.
-- `gstsServer*` functions allow only a **single trailing `return <expr>`**.
-- Recursion, `async/await`, and Promise are not supported in node graph scope.
-- `while(true)` is limited by a loop cap; use timers or explicit counters instead.
-- `!` and ternary require boolean conditions.
+- `if/while/switch` の条件は `boolean` 必須です。必要なら `bool(...)` を使ってください。
+- `gstsServer*` 関数は **末尾の単一 `return <expr>` のみ**許可されます。
+- ノードグラフスコープでは再帰、`async/await`、Promise は非対応です。
+- `while(true)` はループ上限で制限されます。代わりにタイマーや明示的カウンタを使ってください。
+- `!` や三項演算子は条件が boolean である必要があります。
 
-### Numbers and Types
+### 数値と型
 
-- `number` is **float**; `bigint` is **int**.
-- Use `bigint` for modulo/bitwise operations.
-- Lists/dicts must be homogeneous; mixed types will fail.
-- Empty arrays may not infer a type; add a typed placeholder or use `list(...)`.
-- Prefer explicit helpers: `int`, `float`, `vec3`, `configId`, `prefabId`, `entity`, etc.
-- `dict(...)` creates a read-only dict; use graph variables for mutable dicts.
-- Use `let` to force a local variable node; `const` may be optimized into direct wiring.
+- `number` は **float**、`bigint` は **int** です。
+- 剰余/ビット演算は `bigint` を使ってください。
+- list/dict は同種要素のみ（homogeneous）です。混在型は失敗します。
+- 空配列は型推論できない場合があります。型付きプレースホルダを入れるか `list(...)` を使ってください。
+- `int`, `float`, `vec3`, `configId`, `prefabId`, `entity` などの明示ヘルパーを優先してください。
+- `dict(...)` は読み取り専用 dict を作ります。可変 dict はグラフ変数（`f.get` / `f.set`）で扱ってください。
+- `let` はローカル変数ノードの生成を強制できます。`const` は最適化で直結配線になる場合があります。
 
-### Global Functions and Variables Cheat Sheet (Preferred for AI)
+### グローバル関数/変数チートシート（AI 向け推奨）
 
-Logging and debug:
+ログ/デバッグ:
 
-- `print(str(...))`: most stable logging.
-- `console.log(x)`: **single argument only**, auto-rewritten to `print(str(...))`.
-- `f.printString(...)`: explicit node call for strict graph alignment.
+- `print(str(...))`: 最も安定するログ。
+- `console.log(x)`: **引数は 1 つ בלבד**。自動的に `print(str(...))` に書き換えられます。
+- `f.printString(...)`: 厳密にノードを合わせたい場合の明示呼び出し。
 
-Type helpers:
+型ヘルパー:
 
 - `bool(...)` / `int(...)` / `float(...)` / `str(...)`
 - `vec3(...)` / `guid(...)` / `prefabId(...)` / `configId(...)` / `faction(...)` / `entity(...)`
@@ -133,37 +132,36 @@ Type helpers:
 - `dict(...)`: read-only dict.
 - `raw(...)`: compiler ignores it; JS native semantics apply.
 
-Entities and scene:
+エンティティ/シーン:
 
 - `player(1)`: player entity (starts from 1).
 - `stage` / `level`: stage entity aliases.
 - `self`: current graph entity.
 - `GameObject.Find(...)` / `FindWithTag(...)` / `FindByPrefabId(...)`
 
-Math and vectors:
+数学/ベクトル:
 
 - `Math.*`: compiled to node graph equivalents in server scope.
 - `Mathf.*` / `Vector3.*` / `Random.*`: Unity-style APIs.
 
-Signals and events:
+シグナル/イベント:
 
 - `send('signalName')` with `g.server().onSignal(...)`.
 
-Timers:
+タイマー:
 
 - `setTimeout` / `setInterval` / `clearTimeout` / `clearInterval`.
 
-Common methods:
+よく使うメソッド:
 
-- Many array/string methods (`map`/`filter`/`find`/`length`) are supported; rely on type hints.
+- 多くの配列/文字列メソッド（`map`/`filter`/`find`/`length`）に対応しています。型ヒントに従って使ってください。
 
-### Node Graph Variables (Writable)
+### ノードグラフ変数（書き込み可能）
 
 ```ts
 g.server({
   id: 1073741825,
   variables: { counter: 0n },
-  lang: 'zh'
 }).on('whenEntityIsCreated', (_evt, f) => {
   const v = f.get('counter')
   f.set('counter', v + 1n)
@@ -172,25 +170,25 @@ g.server({
 
 Notes:
 
-- `variables` defines graph variables and enables typed `f.get` / `f.set`.
-- Entity variables are type declarations only (use `entity(0)`).
-- `entity(0)` can also be used as a placeholder to keep entity params empty in the editor.
+- `variables` はグラフ変数を定義し、型付きの `f.get` / `f.set` を有効にします。
+- エンティティ変数は型宣言のみです（`entity(0)` を使います）。
+- `entity(0)` は、エディタ上でエンティティ引数を空に保つためのプレースホルダとしても使えます。
 
-### Timers
+### タイマー
 
-- Use `setTimeout` / `setInterval` (milliseconds).
-- The compiler builds timer name pools to avoid name collisions.
-- Use `// @gsts:timerPool=4` to override pool size (advanced).
-- `setInterval` <= 100ms triggers a performance warning.
-- Timer callbacks support value-based captures; dict captures are not supported.
+- `setTimeout` / `setInterval` を使います（ミリ秒）。
+- コンパイラは名前衝突を避けるためタイマー名プールを構築します。
+- `// @gsts:timerPool=4` でプールサイズを上書きできます（上級）。
+- `setInterval` が 100ms 以下の場合、パフォーマンス警告が出ます。
+- タイマーコールバックは値キャプチャに対応しますが、dict のキャプチャは非対応です。
 
-### Native JS Object Limits
+### ネイティブ JS オブジェクト制限
 
-- `Object.*` and `JSON.*` are typically not supported in node graph scope.
-- Move them to top-level precompute, or use `raw(...)`.
-- If string concatenation fails, precompute at top-level or use `str(...)`.
+- `Object.*` と `JSON.*` は通常ノードグラフスコープで非対応です。
+- トップレベルで事前計算するか、`raw(...)` を使ってください。
+- 文字列連結が失敗する場合は、トップレベルで事前計算するか `str(...)` を使ってください。
 
-## Reusable Functions (gstsServer)
+## 再利用関数（gstsServer）
 
 ```ts
 function gstsServerSum(a: bigint, b: bigint) {
@@ -206,59 +204,59 @@ g.server({ id: 1073741825 }).on('whenEntityIsCreated', (_evt, f) => {
 
 Rules:
 
-- Must be top-level; params must be identifiers (no destructuring/default/rest).
-- Only a trailing single `return` is allowed.
-- Calls only allowed inside `g.server().on(...)` or another `gstsServer*`.
-- Inside `gstsServer*`, you can use `gsts.f` directly (no need to pass `f`).
+- トップレベルに定義します。引数は識別子のみ（分割代入/デフォルト/可変長は不可）。
+- `return` は末尾に 1 回だけ許可されます。
+- 呼び出しは `g.server().on(...)` または他の `gstsServer*` 内からのみ可能です。
+- `gstsServer*` 内では `gsts.f` を直接使えます（`f` を渡す必要はありません）。
 
-## Multi-Entry and Merging
+## 複数エントリとマージ
 
-- `entries` in `gsts.config.ts` determines which files compile.
-- Each entry builds a graph; same ID entries are merged.
-- In dev mode, dependency changes recompile affected entries.
+- `gsts.config.ts` の `entries` がコンパイル対象ファイルを決めます。
+- 各エントリはグラフを生成し、同一 ID のエントリはマージされます。
+- dev モードでは依存関係の変更に応じて影響範囲のみ再コンパイルされます。
 
-## Outputs and Debugging
+## 出力とデバッグ
 
-- `.gs.ts`: expanded node function calls for semantic checking.
-- `.json`: IR for node connections and type checks.
-- `.gia`: final graph output for inject/import.
+- `.gs.ts`: ノード関数呼び出しに展開した形（意味/呼び出しチェック向け）。
+- `.json`: ノード接続と型チェック用の IR。
+- `.gia`: 注入/インポート用の最終グラフ出力。
 
-## Compile-Time Execution Notes
+## コンパイル時実行の注意
 
-- The compiler scans all entries and compiles `g.server().on(...)` points.
-- Top-level code may execute once or multiple times (incremental builds, multi-entry).
-- Be careful with file I/O or randomness in top-level scope.
-- To temporarily disable a graph injection, set `id` to a non-existent value.
-- Top-level scope is suitable for file loading, precompute, or procedural generation.
-- `stage.set` can be used as a global variable (runtime).
+- コンパイラはすべてのエントリを走査し、`g.server().on(...)` を起点にコンパイルします。
+- トップレベルコードは（インクリメンタルビルドや複数エントリにより）1 回または複数回実行されることがあります。
+- トップレベルでのファイル I/O や乱数利用には注意してください。
+- 一時的に注入を無効化したい場合は、存在しない `id` を設定してください。
+- トップレベルはファイル読み込み、事前計算、手続き生成に向いています。
+- `stage.set` は（実行時の）グローバル変数として使えます。
 
-## Scripts
+## スクリプト
 
-- `npm run build`: full compile
-- `npm run dev`: incremental compile (auto inject if configured)
-- `npm run maps`: list recent maps
-- `npm run backup`: open backup directory
-- `npm run typecheck`: TypeScript type check
+- `npm run build`: フルコンパイル
+- `npm run dev`: インクリメンタルコンパイル（設定されていれば自動注入）
+- `npm run maps`: 最近のマップ一覧
+- `npm run backup`: バックアップディレクトリを開く
+- `npm run typecheck`: TypeScript 型チェック
 - `npm run lint`: ESLint
 
-Notes:
+メモ:
 
-- The project includes custom ESLint rules; run `npm run lint` often to catch hidden constraints.
-- `npm run typecheck` helps catch type issues before compile errors.
-- `npm run dev` runs `gsts dev` watch mode only.
-- After injection, reload the map to see changes.
-- Use a temporary empty map to quickly swap and reload.
-- Saving the map before reload can overwrite injected content; re-inject if needed.
+- このプロジェクトには独自 ESLint ルールが含まれます。隠れた制約を早めに拾うため `npm run lint` を頻繁に実行してください。
+- `npm run typecheck` はコンパイルエラーになる前に型問題を見つける助けになります。
+- `npm run dev` は `gsts dev` の watch モードのみを実行します。
+- 注入後、変更を反映するにはマップをリロードしてください。
+- 一時的な空マップを用意すると切り替えとリロードが速くなります。
+- リロード前に保存すると注入内容が上書きされる場合があります。必要なら再注入してください。
 
 ## FAQ
 
-- `npm run maps` is empty: save the map in the editor once, then retry.
-- Injection failed: verify `mapId` / `nodeGraphId` and graph type.
-- Type errors: check `.value` usage and pin type alignment first.
+- `npm run maps` が空: エディタで一度マップを保存してから再実行してください。
+- 注入に失敗する: `mapId` / `nodeGraphId` とグラフタイプを確認してください。
+- 型エラー: まず `.value` の使い方と型の整合を確認してください。
 
-## Looking Up Function Notes (AI Friendly)
+## 関数/イベント注釈の探し方（AI 向け）
 
-When type hints are not enough, search in `node_modules/genshin-ts`:
+型ヒントだけでは足りない場合は `node_modules/genshin-ts` を検索してください:
 
-- Node functions and event definitions: `node_modules/genshin-ts/dist/src/definitions/`
-- Use keywords (event name, function name, Chinese alias) to locate comments and params.
+- ノード関数/イベント定義: `node_modules/genshin-ts/dist/src/definitions/`
+- キーワード（イベント名、関数名）でコメントや引数説明を探せます。
