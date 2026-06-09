@@ -369,5 +369,15 @@ export const CustomPrefab = {
   /**
    * Based on prefabId 1000001
    */
-  '默认模版_2(キャラ編集)': 1090519043
+  '默认模版_2(キャラ編集)': 1090519043,
+
+  /**
+   * Based on prefabId 10005018
+   */
+  OrbSP: 1077936185,
+
+  /**
+   * Based on prefabId 10005018
+   */
+  EnemyElementAttack: 1077936186
 }

@@ -5,9 +5,9 @@ const config: GstsConfig = {
   entries: ['./src'],
   outDir: './dist',
   inject: {
-    gameRegion: 'Global',
-    playerId: 873740275,
-    mapId: 1073741825
+    gameRegion: 'China',
+    playerId: 344728135,
+    mapId: 1073741826
   }
 }
 
