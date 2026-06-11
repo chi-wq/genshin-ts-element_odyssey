@@ -3,21 +3,36 @@
 This template bootstraps a Genshin-TS project. Maintain it with user workflow and compile outputs in mind.
 
 ## Read First
+
+- `STRUCTURE.md`: full project structure tree with file annotations.
+- `NOTES.md`: resolved issues, gsts constraints, maintenance notes.
 - `README.md`: full usage flow, constraints, and global function cheat sheet.
 
 ## Layout
-- `src/main.ts`: default entry example
+
+- `NOTES.md`: resolved issues and gsts constraints reference
+- `STRUCTURE.md`: project tree reference
+- `src/main.ts`: entry point, imports all graphs
+- `src/config/`: stage config + game constants
+- `src/graphs/`: node graph definitions (one file per graph)
+- `src/graph-variables/`: node graph variable definitions (dict templates etc.)
+- `src/systems/`: business logic systems
+- `src/utils/`: utility functions
+- `src/resources/`: auto-generated (do not edit)
 - `gsts.config.ts`: compile config (entries/outDir/inject)
 - `dist/`: build outputs (generated)
 - `README.md`: user guide
 - `CLAUDE.md`: AI rules
+- `STRUCTURE.md`: project tree reference
 
 ## Typical Workflow
+
 1. Update the NodeGraph ID in `src/main.ts`
 2. Add `inject` in `gsts.config.ts` when needed
 3. Run `npm run dev` for incremental compile
 
 ## Coding and Maintenance Rules
+
 - Update `entries` when adding new entry files.
 - Entry events use `g.server({ id }).on(...)`; same ID entries merge automatically.
 - `gstsServer*` must be top-level and only allow a single trailing `return`.
@@ -30,19 +45,23 @@ This template bootstraps a Genshin-TS project. Maintain it with user workflow an
 - Use type helpers when needed: `int/float/str/bool/vec3/configId/prefabId/entity`.
 
 ## Node Graph Variables
+
 - Declare with `g.server({ variables: { ... } })`.
 - Read/write via `f.get` / `f.set`, keep types aligned.
 
 ## Debugging Outputs
+
 - `.gs.ts`: verify compiled node calls
 - `.json`: verify connections and types
 - `.gia`: final injectable output
 
 ## Common Scripts
+
 - `npm run dev`
 - `npm run build`
 - `npm run maps`
 - `npm run backup`
 
 ## Reference Definitions
+
 - Search function/event comments in `node_modules/genshin-ts/dist/src/definitions/`.

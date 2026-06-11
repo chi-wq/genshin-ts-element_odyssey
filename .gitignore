@@ -6,3 +6,4 @@ out
 .DS_Store
 *.gia
 .idea
+src/resources/prefabs.ts
