@@ -83,6 +83,13 @@ export function gstsServerClearAllOrbs(f: ServerExecutionFlowFunctions) {
     const orb = f.getCorrespondingValueFromList(orbs, i) // 获取元素球
     f.removeEntity(orb) // 删除元素球
   })
+  // 同时清理特殊元素球
+  const spOrbs = f.getEntitiesWithSpecifiedPrefabOnTheField(orbSPPrefabIdValue)
+  const spOrbLen = f.getListLength(spOrbs)
+  f.finiteLoop(int(0), spOrbLen - int(1), (i) => {
+    const orb = f.getCorrespondingValueFromList(spOrbs, i)
+    f.removeEntity(orb)
+  })
 }
 
 // 随机删除场景上的1个元素球

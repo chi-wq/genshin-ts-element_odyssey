@@ -12,6 +12,7 @@ export const Signal = {
   ]),
   EnterBattleStage: defineSignal('EnterBattleStage', []),
   PreFightPreparation: defineSignal('PreFightPreparation', []),
+  ShowFloatingInteractionPage: defineSignal('ShowFloatingInteractionPage', [['Index', 'int']]),
   SpawnEnemyWave: defineSignal('SpawnEnemyWave', []),
   StageReady: defineSignal('StageReady', [])
 } as const

@@ -1,12 +1,30 @@
-import { EntityType, SettlementStatus, UIControlGroupStatus } from 'genshin-ts/definitions/enum'
+import {
+  DecisionRefreshMode,
+  EntityType,
+  SettlementStatus,
+  UIControlGroupStatus
+} from 'genshin-ts/definitions/enum'
 import { ServerExecutionFlowFunctions } from 'genshin-ts/definitions/nodes' // 服务器执行流函数
 
 import { battleStageConfig } from '../config/battleStageConfig'
-import { maxStage, maxStageIdx, orbSPMax, orbSPMin, StageTimer } from '../config/constants'
+import {
+  CardPurify,
+  DeckSelectorDuration,
+  DeckSelectorIndex,
+  DeckSelectorSelectMax,
+  DeckSelectorSelectMin,
+  maxStage,
+  maxStageIdx,
+  orbSPMax,
+  orbSPMin,
+  RestartPageIndex,
+  StageTimer
+} from '../config/constants'
 import { Signal } from '../resources/signals'
 import { gstsServerGetListValue } from '../utils/stageUtils'
-import { gstsServerSetESkillIcon } from './cardSystem'
+import { gstsServerSetESkillIcon, gstsServerShowDeckSelector } from './cardSystem'
 import { gstsServerUpdateElementIcons } from './elementSystem'
+import { gstsServerClearAllEnemies } from './enemySystem'
 import {
   gstsServerClearAllOrbs,
   gstsServerCreateOrbAtRandomPos,
@@ -74,6 +92,7 @@ export function gstsServerInitializeStageVariables(
   currentStage: bigint,
   f: ServerExecutionFlowFunctions
 ) {
+  stage.set('deadlockPageShown', false)
   stage.set('enemyCount', int(0)) // 初始化敌人数为0
   gstsServerSetOrbCollectable(false, f as unknown as ServerExecutionFlowFunctions) // 设置元素球不可拾取
   stage.set('collectableTimeout', int(0)) // 初始化拾取超时为0
@@ -130,6 +149,12 @@ export function gstsServerCreateStage(currentStage: bigint, f: ServerExecutionFl
     // 初始化阶段变量（根据阶段设置难度）
     gstsServerInitializeStageVariables(currentStage, f)
 
+    // 敌人全灭
+    gstsServerClearAllEnemies(f)
+
+    // 删除所有元素球
+    gstsServerClearAllOrbs(f)
+
     // 在随机位置生成元素球（数量由 orbCount 决定）
     f.finiteLoop(int(0), stage.get('orbCount').asType('int') - int(1), () => {
       gstsServerCreateOrbAtRandomPos(3.2, f as unknown as ServerExecutionFlowFunctions) // 生成1个元素球
@@ -142,6 +167,29 @@ export function gstsServerCreateStage(currentStage: bigint, f: ServerExecutionFl
     })
   }
   return int(0) // 返回值
+}
+
+// 死锁检测：场上无敌人 + 无法再生成敌人 (maxEnemies=0) + 无可用净化卡牌 + 球数不足
+// 返回 true 表示满足死锁条件，false 表示不满足
+export function gstsServerCheckDeadlock() {
+  const enemyCount = stage.get('enemyCount').asType('int') // 获取敌人数
+  const orbsCollected = stage.get('orbsCollected').asType('int') // 获取已收集元素球数
+  const orbsRequired = stage.get('orbsRequired').asType('int') // 获取所需元素球数
+  const maxEnemies = stage.get('maxEnemies').asType('int')
+  const cardEffect = stage.get('cardEffect').asType('int')
+  const canPickup = stage.get('orbsCollectable').asType('bool')
+  const hasPurify = cardEffect === CardPurify
+  let result = false
+  if (
+    enemyCount === int(0) &&
+    maxEnemies === int(0) &&
+    orbsCollected < orbsRequired &&
+    !canPickup &&
+    !hasPurify
+  ) {
+    result = true
+  }
+  return result
 }
 
 // 战斗计时开始
@@ -203,37 +251,73 @@ export function gstsServerStartStageIntervalTimer(f: ServerExecutionFlowFunction
         gstsServerNextStage(currentStage, f as unknown as ServerExecutionFlowFunctions) // 进入下一阶段
         clearInterval(stageTimerInterval) // 清除计时器
       } else {
-        // 可拾取倒计时逻辑（每秒递减，超时后不可拾取，触发敌人生成）
-
-        const canPickup = stage.get('orbsCollectable').asType('bool') // 获取可拾取标记
-        if (canPickup) {
-          // 可拾取时
-          const countdown = stage.get('collectableTimeout').asType('int') // 获取倒计时值
-          if (countdown > int(0)) {
-            // 倒计时中
-            stage.set('collectableTimeout', countdown - int(1)) // 倒计时减1
-          } else {
-            // 倒计时结束
-            gstsServerSetOrbCollectable(false, f as unknown as ServerExecutionFlowFunctions) // 设置为不可拾取
-            if (orbsCollected < orbsRequired) {
-              send(Signal.SpawnEnemyWave) // 仍未达到所需元素球数时继续生成敌人
+        const canPickup = stage.get('orbsCollectable').asType('bool')
+        // 死锁检测：无敌人 + 无新敌人可生成 + 净化卡牌不可用 + 球数不足 → 卡死状态
+        if (gstsServerCheckDeadlock()) {
+          // 避免重复弹窗，只处理一次
+          const deadlockShown = stage.get('deadlockPageShown').asType('bool')
+          if (!deadlockShown) {
+            print(str('检测到死锁（maxEnemies=0 且无净化卡牌），请求显示交互页...'))
+            stage.set('deadlockPageShown', true)
+            send(Signal.ShowFloatingInteractionPage, RestartPageIndex)
+          }
+        } else {
+          let needSpawnEnemyWave = false
+          // 可拾取倒计时逻辑（每秒递减，超时后不可拾取，触发敌人生成）
+          if (canPickup) {
+            // 可拾取时
+            const countdown = stage.get('collectableTimeout').asType('int') // 获取倒计时值
+            if (countdown > int(0)) {
+              // 倒计时中
+              stage.set('collectableTimeout', countdown - int(1)) // 倒计时减1
+            } else {
+              // 倒计时结束
+              gstsServerSetOrbCollectable(false, f as unknown as ServerExecutionFlowFunctions) // 设置为不可拾取
+              if (orbsCollected < orbsRequired) {
+                // 仍未达到所需元素球数时继续生成敌人
+                needSpawnEnemyWave = true
+              }
             }
           }
-        }
-        // 敌人生成：每10秒生成1波
-        const spawnTimer = stage.get('spawnTimer').asType('int') + int(1) // 增加生成计时器
-        stage.set('spawnTimer', spawnTimer) // 更新生成计时器
-        if (spawnTimer >= int(10)) {
-          // 已过10秒时
-          stage.set('spawnTimer', int(0)) // 重置生成计时器
-          if (orbsCollected < orbsRequired) {
-            // 仍未达到所需元素球数时
+          // 敌人生成：每10秒生成1波
+          const spawnTimer = stage.get('spawnTimer').asType('int') + int(1) // 增加生成计时器
+          stage.set('spawnTimer', spawnTimer) // 更新生成计时器
+          if (spawnTimer >= int(10)) {
+            // 已过10秒时
+            stage.set('spawnTimer', int(0)) // 重置生成计时器
+            if (orbsCollected < orbsRequired) {
+              // 仍未达到所需元素球数时
+              needSpawnEnemyWave = true
+            }
+          }
+          if (needSpawnEnemyWave === true) {
             send(Signal.SpawnEnemyWave) // 发送敌人波次生成信号
           }
         }
       }
     }
   }, 1000) // 1秒间隔
+}
+
+// 重置本关：清除元素球、重置变量、重新展示卡牌选择器
+export function gstsServerRestartStage(f: ServerExecutionFlowFunctions) {
+  print(str('重置本关...'))
+  const currentStage = stage.get('currentStage').asType('int') - int(1)
+  stage.set('isRestarting', true)
+  const player1 = player(1) // 获取玩家1
+  // 敌人全灭
+  gstsServerClearAllEnemies(f)
+  // 删除所有元素球
+  gstsServerClearAllOrbs(f)
+  // 停止全局计时器并隐藏UI
+  f.stopGlobalTimer(stage, 'StageTimer') // 停止阶段计时器
+  stage.set('stageTimerActive', false) // 设置阶段计时器运行标记为false
+  f.modifyUiControlStatusWithinTheInterfaceLayout(player1, StageTimer, UIControlGroupStatus.Off) // 隐藏计时器UI
+  f.set('challengeState', int(3), true)
+
+  stage.set('currentStage', currentStage)
+  send(Signal.PreFightPreparation)
+  print(str('重置完成'))
 }
 
 // 等待场景和玩家初始化完成，然后发送 StageReady 信号

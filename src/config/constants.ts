@@ -61,6 +61,11 @@ export const CardTimeIcon = int(111016) // 增加时间图标
 export const CardClearEnemiesIcon = int(111025) // 敌人全灭图标
 export const CardPurifyIcon = int(111048) // 净化深渊球图标
 
+// === 悬浮交互页 ===
+// 需在千星奇域编辑器中创建「悬浮交互页」后填入对应索引
+export const RestartPageIndex = int(1073742337)
+export const RestartConfirmItem = int(1073742367) // 重置按钮交互项索引
+
 // === 元素攻击相关常量 ===
 export const elementAttackPrefabIdValue = prefabId(CustomPrefab.ElementAttack) // 元素攻击预制体ID
 export const monitorElementalReaction = configId(1077936129) // 元素反应监测配置ID

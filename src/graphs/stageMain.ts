@@ -158,6 +158,13 @@ g.server({
       }
     }
   })
+  .onSignal(Signal.ShowFloatingInteractionPage, (evt, f) => {
+    print(str('收到信号，唤起悬浮交互页...'))
+    print(str('页面索引:'))
+    console.log(evt.params.Index)
+    f.showFloatingInteractionPage(player(1), evt.params.Index, dict('int', 'int_list', null))
+    print(str('showFloatingInteractionPage 已调用'))
+  })
   .on('whenAllPlayerSCharactersAreDown', (_evt, f) => {
     print(str('玩家全部角色倒下！失败结算...'))
     gstsServerSettleSuccessStatus(int(2), f as unknown as ServerExecutionFlowFunctions)
