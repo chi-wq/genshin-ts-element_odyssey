@@ -80,7 +80,10 @@ g.server({
     const enemyCount = stage.get('enemyCount').asType('int')
     const orbsCollected = stage.get('orbsCollected').asType('int')
     const orbsRequired = stage.get('orbsRequired').asType('int')
-    if (enemyCount < stage.get('maxEnemies').asType('int') && orbsCollected < orbsRequired) {
+    if (
+      enemyCount < stage.get('maxEnemies').asType('int') &&
+      (orbsRequired === int(0) || orbsCollected < orbsRequired)
+    ) {
       const currentStage = stage.get('currentStage').asType('int')
       gstsServerSpawnEnemyWave(currentStage, f as unknown as ServerExecutionFlowFunctions)
     }
@@ -101,19 +104,38 @@ g.server({
     const currentStage = stage.get('currentStage').asType('int') + int(1)
     stage.set('currentStage', currentStage)
     gstsServerCreateStage(currentStage, f as unknown as ServerExecutionFlowFunctions)
-    const fixedCard = gstsServerGetListValue(
-      battleStageConfig.fixedCard,
+    // 判断是否跳过卡牌选择器（第1关教学不需要选卡）
+    const skipCard = gstsServerGetListValue(
+      battleStageConfig.skipCardSelector,
       currentStage,
       maxStageIdx,
       'int',
       f
     ) as unknown as bigint
-    gstsServerShowDeckSelector(fixedCard, f as unknown as ServerExecutionFlowFunctions)
+    if (skipCard === int(0)) {
+      const fixedCard = gstsServerGetListValue(
+        battleStageConfig.fixedCard,
+        currentStage,
+        maxStageIdx,
+        'int',
+        f
+      ) as unknown as bigint
+      gstsServerShowDeckSelector(fixedCard, f as unknown as ServerExecutionFlowFunctions)
+    } else {
+      // 跳过选卡，直接传送（扫描标签已确保场景就绪）
+      print(str('跳过卡牌选择器，直接传送'))
+      stage.set('teleportFrom', int(0))
+      f.teleportPlayer(player(1), vec3([10.49, 3.48, 2.97]), vec3([0, -99.36, 0]))
+    }
   })
   .on('whenEntityIsDestroyed', (evt, f) => {
     const faction = evt.faction as unknown as number
     if (faction === factionEnemy) {
-      gstsServerHandleEnemyKill(f as unknown as ServerExecutionFlowFunctions)
+      // 跳过关卡切换时清理旧敌人导致的误触发（challengeState不为0表示非战斗中）
+      const state = f.get('challengeState') as unknown as bigint
+      if (state === int(0)) {
+        gstsServerHandleEnemyKill(f as unknown as ServerExecutionFlowFunctions)
+      }
     }
   })
   .onSignal(Signal.ClientSignal, (evt, f) => {

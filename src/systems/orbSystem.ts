@@ -34,9 +34,11 @@ export function gstsServerCreateOrbAtRandomPos(yPos: number, f: ServerExecutionF
 }
 
 // 在随机位置生成特殊元素球
+// fixedElem: 0=随机, 5~8=固定特殊元素类型
 export function gstsServerCreateSpecialOrbAtRandomPos(
   yPos: number,
-  f: ServerExecutionFlowFunctions
+  f: ServerExecutionFlowFunctions,
+  fixedElem: bigint
 ) {
   const x = f.getRandomInteger(int(-10), int(10)) // 随机生成X坐标
   const z = f.getRandomInteger(int(-10), int(10)) // 随机生成Z坐标
@@ -53,12 +55,16 @@ export function gstsServerCreateSpecialOrbAtRandomPos(
   )
   orb.setFaction(2) // 设置阵营为2
   f.activateDisableModelDisplay(orb, false) // 禁用模型显示（初始隐藏）
-  // 随机设置特殊元素类型，保存到元素球的自定义变量中
-  const specialTypes = gstsServerGetSpecialElementalTypes(
-    f as unknown as ServerExecutionFlowFunctions
-  ) // 获取特殊元素列表
-  const elemIdx = f.getRandomInteger(int(0), int(3)) // 获取随机索引（0~3）
-  const elemType = f.getCorrespondingValueFromList(specialTypes, elemIdx) // 获取对应元素
+  // 设置特殊元素类型
+  let elemType = fixedElem
+  if (elemType === int(0)) {
+    // 0=随机选择
+    const specialTypes = gstsServerGetSpecialElementalTypes(
+      f as unknown as ServerExecutionFlowFunctions
+    )
+    const elemIdx = f.getRandomInteger(int(0), int(3)) // 获取随机索引（0~3）
+    elemType = f.getCorrespondingValueFromList(specialTypes, elemIdx)
+  }
   orb.setCustomVariable('element', elemType as unknown as bigint) // 将元素保存到自定义变量
 }
 

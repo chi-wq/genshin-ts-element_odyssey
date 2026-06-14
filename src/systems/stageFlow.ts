@@ -15,8 +15,6 @@ import {
   DeckSelectorSelectMin,
   maxStage,
   maxStageIdx,
-  orbSPMax,
-  orbSPMin,
   RestartPageIndex,
   StageTimer
 } from '../config/constants'
@@ -94,7 +92,19 @@ export function gstsServerInitializeStageVariables(
 ) {
   stage.set('deadlockPageShown', false)
   stage.set('enemyCount', int(0)) // 初始化敌人数为0
-  gstsServerSetOrbCollectable(false, f as unknown as ServerExecutionFlowFunctions) // 设置元素球不可拾取
+  gstsServerSetOrbCollectable(false, f as unknown as ServerExecutionFlowFunctions)
+  // 读取 permanentOrbs 配置：如果为 true，元素球永久可见可拾取
+  const permanentOrbs = gstsServerGetListValue(
+    battleStageConfig.permanentOrbs,
+    currentStage,
+    maxStageIdx,
+    'int',
+    f
+  ) as unknown as bigint
+  stage.set('permanentOrbs', permanentOrbs === int(1))
+  if (permanentOrbs === int(1)) {
+    gstsServerSetOrbCollectable(true, f as unknown as ServerExecutionFlowFunctions)
+  }
   stage.set('collectableTimeout', int(0)) // 初始化拾取超时为0
   stage.set('orbsCollected', int(0)) // 初始化已收集元素球数为0
   stage.set('spawnTimer', int(0)) // 初始化生成计时器为0
@@ -104,18 +114,11 @@ export function gstsServerInitializeStageVariables(
   stage.set('reactionMsg', str('')) // 初始化元素反应消息为空字符串
   stage.set('reactionMsgColor', str('')) // 初始化元素反应消息颜色为空字符串
   stage.set('stageTimerActive', false) // 初始化阶段计时器运行标记为false
-  const initElement = f.getRandomInteger(int(1), int(4)) // 随机决定主元素
-  stage.set('mainElement', initElement) // 设置主元素
-  gstsServerUpdateElementIcons(initElement, true, f) // 更新主元素图标
-  // 副元素设为与主元素不同的值（加偏移1～3，超过4则-4）
-  const offset = f.getRandomInteger(int(1), int(3)) // 获取随机偏移
-  let initSub = initElement + offset // 计算副元素
-  if (initSub > int(4)) {
-    // 超过4时
-    initSub = initSub - int(4) // 回绕
-  }
-  stage.set('subElement', initSub) // 设置副元素
-  gstsServerUpdateElementIcons(initSub, false, f) // 更新副元素图标
+  // 主/副元素跨阶段继承（不随机重置），更新UI图标
+  const existingMain = stage.get('mainElement').asType('int')
+  const existingSub = stage.get('subElement').asType('int')
+  gstsServerUpdateElementIcons(existingMain, true, f)
+  gstsServerUpdateElementIcons(existingSub, false, f)
   f.set('challengeState', int(0), true) // 设置挑战状态为进行中
   // 从 battleStageConfig 获取各阶段配置值
   stage.set(
@@ -160,11 +163,30 @@ export function gstsServerCreateStage(currentStage: bigint, f: ServerExecutionFl
       gstsServerCreateOrbAtRandomPos(3.2, f as unknown as ServerExecutionFlowFunctions) // 生成1个元素球
     })
 
-    // 额外生成1~3个特殊元素球（风/岩/草）
-    const spCount = f.getRandomInteger(orbSPMin, orbSPMax) // 随机决定本阶段生成几个特殊元素球
-    f.finiteLoop(int(0), spCount - int(1), () => {
-      gstsServerCreateSpecialOrbAtRandomPos(3.2, f as unknown as ServerExecutionFlowFunctions) // 生成1个特殊元素球
-    })
+    // 生成特殊元素球（风/岩/草/光）
+    const orbSPCount = gstsServerGetListValue(
+      battleStageConfig.orbSPCount,
+      currentStage,
+      maxStageIdx,
+      'int',
+      f
+    ) as unknown as bigint
+    const fixedSpecialOrb = gstsServerGetListValue(
+      battleStageConfig.fixedSpecialOrb,
+      currentStage,
+      maxStageIdx,
+      'int',
+      f
+    ) as unknown as bigint
+    if (orbSPCount > int(0)) {
+      f.finiteLoop(int(0), orbSPCount - int(1), () => {
+        gstsServerCreateSpecialOrbAtRandomPos(
+          3.2,
+          f as unknown as ServerExecutionFlowFunctions,
+          fixedSpecialOrb
+        )
+      })
+    }
   }
   return int(0) // 返回值
 }
@@ -194,6 +216,9 @@ export function gstsServerCheckDeadlock() {
 
 // 战斗计时开始
 export function gstsServerStartStageIntervalTimer(f: ServerExecutionFlowFunctions) {
+  // 初始生成一波敌人
+  send(Signal.SpawnEnemyWave)
+
   // 阶段计时器（每秒执行，也负责敌人生成）
   const stageTimerInterval = setInterval(() => {
     print(str('阶段计时器执行')) // 调试日志
@@ -251,6 +276,17 @@ export function gstsServerStartStageIntervalTimer(f: ServerExecutionFlowFunction
         gstsServerNextStage(currentStage, f as unknown as ServerExecutionFlowFunctions) // 进入下一阶段
         clearInterval(stageTimerInterval) // 清除计时器
       } else {
+        // 调试：打印为何未通关
+        if (enemyCount === int(0)) {
+          print(str('敌人已清空，球未达标'))
+          console.log(orbsCollected)
+          print(str('/'))
+          console.log(orbsRequired)
+        }
+        if (orbsCollected >= orbsRequired) {
+          print(str('球已达标，敌人未清空'))
+          console.log(enemyCount)
+        }
         const canPickup = stage.get('orbsCollectable').asType('bool')
         // 死锁检测：无敌人 + 无新敌人可生成 + 净化卡牌不可用 + 球数不足 → 卡死状态
         if (gstsServerCheckDeadlock()) {
@@ -263,8 +299,9 @@ export function gstsServerStartStageIntervalTimer(f: ServerExecutionFlowFunction
           }
         } else {
           let needSpawnEnemyWave = false
-          // 可拾取倒计时逻辑（每秒递减，超时后不可拾取，触发敌人生成）
-          if (canPickup) {
+          const permaOrbs = stage.get('permanentOrbs').asType('bool')
+          // 可拾取倒计时逻辑（永久可见的关卡跳过此逻辑）
+          if (canPickup && !permaOrbs) {
             // 可拾取时
             const countdown = stage.get('collectableTimeout').asType('int') // 获取倒计时值
             if (countdown > int(0)) {
@@ -273,8 +310,8 @@ export function gstsServerStartStageIntervalTimer(f: ServerExecutionFlowFunction
             } else {
               // 倒计时结束
               gstsServerSetOrbCollectable(false, f as unknown as ServerExecutionFlowFunctions) // 设置为不可拾取
-              if (orbsCollected < orbsRequired) {
-                // 仍未达到所需元素球数时继续生成敌人
+              if (orbsRequired === int(0) || orbsCollected < orbsRequired) {
+                // 纯战斗关或未达到所需元素球数时继续生成敌人
                 needSpawnEnemyWave = true
               }
             }
@@ -285,8 +322,8 @@ export function gstsServerStartStageIntervalTimer(f: ServerExecutionFlowFunction
           if (spawnTimer >= int(10)) {
             // 已过10秒时
             stage.set('spawnTimer', int(0)) // 重置生成计时器
-            if (orbsCollected < orbsRequired) {
-              // 仍未达到所需元素球数时
+            if (orbsRequired === int(0) || orbsCollected < orbsRequired) {
+              // 未达到所需元素球数时（或纯战斗关）
               needSpawnEnemyWave = true
             }
           }
@@ -343,8 +380,8 @@ export function gstsServerWaitForPlayerReady(f: ServerExecutionFlowFunctions) {
             const attrs = f.getCharacterAttribute(character as unknown as ReturnType<typeof entity>)
             if (attrs.maxHp > float(0)) {
               print(str('玩家角色的属性值可以正常取得'))
+              stage.set('CharacterReady', true)
               clearInterval(interval)
-              send(Signal.StageReady)
             }
           }
         }
