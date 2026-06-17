@@ -40,3 +40,38 @@
 - 顶层 `dict(pairs)` 创建的 `ReadonlyDict` **不能**作为字面量传入 `f.queryDictionaryValueByKey()` — gsts IR 不支持序列化字典为内联值
 - 字典的正确用法：运行时 `f.assemblyDictionary()`、图变量声明、或空占位 `dict('str','float',null)`
 - 顶层预计算数据传给 server 函数只能用 `list()` 数组
+
+## gsts 回调体内变量与运算符规则
+
+- `finiteLoop`、`doubleBranch`、`setInterval` 等 gsts API 的回调体内，只能访问经过 gsts 变量包装的值
+- 直接用 `f.getCorrespondingValueFromList` 获取的原始值在回调内**不可读**
+- 正确做法：用 `f.initLocalVariable` + `f.setLocalVariable` 包装
+  ```typescript
+  const raw = gstsServerGetListValue(data, index, maxIdx, 'int', f)
+  const wrapped = f.initLocalVariable('int')
+  f.setLocalVariable(wrapped.localVariable, raw)
+  f.finiteLoop(int(0), count - int(1), (i) => {
+    const result = f.addition(wrapped.value, i) // ✅ 回调体内用 API 方法
+  })
+  ```
+- **回调体内算术必须用 `f.addition()`/`f.subtraction()` 等 API 方法**，不能用 JavaScript `+`/`-` 运算符（编译器只转换 API 调用参数位置的运算符，不转换回调体内变量赋值/表达式中的运算符）
+- **比较结果必须用 `f.doubleBranch()`/`f.singleBranch()` 判断**，不能用 `if`。`f.lessThan`、`f.greaterThanOrEqualTo` 等比较 API 返回的是 gsts 布尔**对象**，在 JavaScript `if()` 里永远是 truthy，导致条件永远为真。示例：
+
+  ```typescript
+  // ❌ 错误：if 对 gsts 布尔对象永远是 truthy
+  if (f.lessThan(y, float(2.5))) { ... }
+
+  // ✅ 正确：用 doubleBranch 编译为条件图节点
+  f.doubleBranch(
+    f.greaterThanOrEqualTo(y, float(2.5)),
+    () => { /* 条件为真时 */ },
+    () => { /* 条件为假时 */ }
+  )
+  ```
+
+## 展平数组 + offset 模式
+
+- 多阶段槽位数据展平到单个数组，用 `slotStarts`/`slotCounts` 定位每阶段的数据段
+- `gstsServerGetListValue`（1 基）和 `gstsServerGetListValue0`（0 基）读取数据
+- `gstsServerGetListValue0` 内部用 `initLocalVariable`/`setLocalVariable` 包装索引参数
+- 循环内用 `startIdxVar.value + i` 计算展平索引（需先包装 `startIdx`）

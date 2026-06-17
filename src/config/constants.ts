@@ -73,3 +73,19 @@ export const enemyElementAttackPrefabIdValue = prefabId(CustomPrefab.EnemyElemen
 
 // 护盾
 export const geoShieldConfigId = configId(1077936131) // 单位状态护盾
+
+// === 手动重置按钮 ===
+export const ResetButton = int(1073742372) // 手动重置按钮控件组索引
+
+// === 传送点坐标 ===
+export const PlayerSpawnPos = vec3([10.49, 3.48, 2.97]) // 玩家出生/传送位置
+export const PlayerSpawnRot = vec3([0, -99.36, 0]) // 玩家出生/传送旋转
+export const PlayerSpawnPos2 = vec3([224.67, 3.39, -2.78]) // 备用传送位置
+export const PlayerSpawnRot2 = vec3([0, 272.89, 0]) // 备用传送旋转
+
+// === 防掉落安全位置 ===
+export const SafeFallbackPos = vec3([1, 3.5, 0]) // 敌人掉落地板后的回拉位置
+export const SafeFallbackRot = vec3([0, 0, 0]) // 回拉旋转
+
+// === 调试开关 ===
+export const DEBUG = false // 设为 true 启用调试日志

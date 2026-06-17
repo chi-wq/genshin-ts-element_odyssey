@@ -1,7 +1,15 @@
+import { FixedMotionParameterType, MovementMode } from 'genshin-ts/definitions/enum'
 import { ServerExecutionFlowFunctions } from 'genshin-ts/definitions/nodes' // 服务器执行流函数
 
+// 服务器执行流函数
+
 import { battleStageConfig } from '../config/battleStageConfig'
-import { factionEnemy, maxStageIdx, monitorElementalReaction } from '../config/constants'
+import {
+  factionEnemy,
+  maxStageIdx,
+  monitorElementalReaction,
+  SafeFallbackRot
+} from '../config/constants'
 import { spawnSlots } from '../config/spawnSlots'
 import {
   enemyFighter,
@@ -11,6 +19,7 @@ import {
   enemyRuinGuard,
   gstsServerGetPrefabByName
 } from '../utils/enemyPrefabs'
+import { debugLog, debugLogValue, log, logValue } from '../utils/logger'
 import { gstsServerGetListValue, gstsServerGetListValue0 } from '../utils/stageUtils'
 
 // 生成单个敌人（不更新计数）
@@ -50,6 +59,8 @@ export function gstsServerSpawnSlot(
   f: ServerExecutionFlowFunctions
 ) {
   if (slotType !== str('')) {
+    print(str('生成敌人:'))
+    print(slotType)
     const prefab = gstsServerGetPrefabByName(slotType)
     const pos = gstsServerGetEnemyPosByIdx(slotPosIdx, f)
     const rot = gstsServerGetEnemyRotByIdx(slotRotIdx, f)
@@ -74,8 +85,14 @@ export function gstsServerSpawnEnemyWave(currentStage: bigint, f: ServerExecutio
     'int',
     f
   ) as unknown as bigint
+  // 强制 gsts 变量包装，使 startIdx 在 finiteLoop 作用域内可读
+  const startIdxVar = f.initLocalVariable('int')
+  f.setLocalVariable(startIdxVar.localVariable, startIdx)
   f.finiteLoop(int(0), slotCount - int(1), (i) => {
-    const flatIdx = startIdx + i
+    // 回调体内算术必须用 f.addition/f.subtraction 等 API 方法，
+    // 不能用 JavaScript + / - 运算符（编译器不转换回调体内的运算符）
+    const flatIdx = f.addition(startIdxVar.value, i)
+    debugLogValue('flatIdx:', flatIdx)
     const slotType = gstsServerGetListValue0(
       battleStageConfig.slotTypes,
       flatIdx,
@@ -159,4 +176,53 @@ export function gstsServerHandleEnemyKill(f: ServerExecutionFlowFunctions) {
   }
   print(str('分数:'))
   console.log(stage.get('score').asType('int'))
+}
+
+// 检测掉落地板下的敌人并拉回安全位置
+export function gstsServerCheckFallenEnemies(f: ServerExecutionFlowFunctions) {
+  debugLog('[防掉落] 开始检测')
+  const safeRot = SafeFallbackRot
+  const dict = f.assemblyDictionary([
+    { k: str('hilichurl'), v: enemyHilichurl },
+    { k: str('pyroSlime'), v: enemyPyroSlime },
+    { k: str('fighter'), v: enemyFighter },
+    { k: str('hydroSamachurl'), v: enemyHydroSamachurl },
+    { k: str('ruinGuard'), v: enemyRuinGuard }
+  ])
+  const prefabs = f.getListOfValuesFromDictionary(dict)
+  const numTypes = f.getListLength(prefabs)
+  debugLog('[防掉落] 敌人类型数:')
+  debugLogValue('numTypes:', numTypes)
+  f.finiteLoop(int(0), numTypes - int(1), (i) => {
+    const prefab = f.getCorrespondingValueFromList(prefabs, i)
+    const entities = f.getEntitiesWithSpecifiedPrefabOnTheField(prefab)
+    const count = f.getListLength(entities)
+    debugLog('[防掉落] 该类型在场实体数:')
+    debugLogValue('count:', count)
+    f.finiteLoop(int(0), f.subtraction(count, int(1)), (j) => {
+      const enemy = f.getCorrespondingValueFromList(entities, j)
+      const loc = f.getEntityLocationAndRotation(enemy)
+      const comp = f.split3dVector(loc.location)
+      debugLog('[防掉落] 实体Y坐标:')
+      debugLogValue('yComponent:', comp.yComponent)
+      // 如果 Y 坐标低于 2.5（地板约 3），说明掉到地板下了
+      // 注意：必须用 f.doubleBranch 代替 if 做条件分支！
+      // gsts API 方法返回的是 gsts 布尔对象，在 JavaScript if() 里永远是 truthy，
+      // 会导致无论条件真假都进入分支。f.doubleBranch 编译为正确的图节点。
+      f.doubleBranch(
+        f.greaterThanOrEqualTo(comp.yComponent, float(2.5)),
+        () => {
+          /* Y >= 2.5，正常，不做任何事 */
+        },
+        () => {
+          debugLog('[防掉落] Y<2.5，准备重生拉回')
+          const respawnPos = f.create3dVector(comp.xComponent, float(3.5), comp.zComponent)
+          // 先生成再抹除，避免触发0敌人判定
+          gstsServerSpawnEnemy(prefab, respawnPos, safeRot, f)
+          f.removeEntity(enemy)
+          debugLog('[防掉落] 重生拉回完成')
+        }
+      )
+    })
+  })
 }

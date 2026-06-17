@@ -9,6 +9,9 @@ import {
   factionEnemy,
   InitTimer,
   maxStageIdx,
+  PlayerSpawnPos,
+  PlayerSpawnRot,
+  ResetButton,
   StageTimer
 } from '../config/constants'
 import { Signal } from '../resources/signals'
@@ -48,7 +51,7 @@ g.server({
       f.stopGlobalTimer(stage, 'InitTimer')
       f.modifyUiControlStatusWithinTheInterfaceLayout(player1, InitTimer, UIControlGroupStatus.Off)
       stage.set('teleportFrom', int(0))
-      f.teleportPlayer(player1, vec3([10.49, 3.48, 2.97]), vec3([0, -99.36, 0]))
+      f.teleportPlayer(player1, PlayerSpawnPos, PlayerSpawnRot)
     } else if (evt.timerName === 'StageTimer') {
       print(str('阶段计时器匹配！'))
       print(str('挑战失败：超时'))
@@ -95,10 +98,18 @@ g.server({
     f.modifyUiControlStatusWithinTheInterfaceLayout(player(1), StageTimer, UIControlGroupStatus.On)
     f.startGlobalTimer(stage, 'StageTimer')
     stage.set('stageTimerActive', true)
+    // 显示手动重置按钮
+    f.modifyUiControlStatusWithinTheInterfaceLayout(player(1), ResetButton, UIControlGroupStatus.On)
     gstsServerStartStageIntervalTimer(f as unknown as ServerExecutionFlowFunctions)
   })
   .onSignal(Signal.PreFightPreparation, (_evt, f) => {
     print(str('收到玩家退场信号！停止阶段计时器...'))
+    // 隐藏手动重置按钮
+    f.modifyUiControlStatusWithinTheInterfaceLayout(
+      player(1),
+      ResetButton,
+      UIControlGroupStatus.Off
+    )
     f.modifyUiControlStatusWithinTheInterfaceLayout(player(1), StageTimer, UIControlGroupStatus.Off)
     f.stopGlobalTimer(stage, 'StageTimer')
     const currentStage = stage.get('currentStage').asType('int') + int(1)
@@ -125,7 +136,7 @@ g.server({
       // 跳过选卡，直接传送（扫描标签已确保场景就绪）
       print(str('跳过卡牌选择器，直接传送'))
       stage.set('teleportFrom', int(0))
-      f.teleportPlayer(player(1), vec3([10.49, 3.48, 2.97]), vec3([0, -99.36, 0]))
+      f.teleportPlayer(player(1), PlayerSpawnPos, PlayerSpawnRot)
     }
   })
   .on('whenEntityIsDestroyed', (evt, f) => {

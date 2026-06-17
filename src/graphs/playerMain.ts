@@ -2,7 +2,14 @@ import { UIControlGroupStatus } from 'genshin-ts/definitions/enum'
 import { ServerExecutionFlowFunctions } from 'genshin-ts/definitions/nodes'
 import { g } from 'genshin-ts/runtime/core'
 
-import { InitTimer, RestartConfirmItem, RestartPageIndex } from '../config/constants'
+import {
+  InitTimer,
+  PlayerSpawnPos,
+  PlayerSpawnRot,
+  ResetButton,
+  RestartConfirmItem,
+  RestartPageIndex
+} from '../config/constants'
 import { Signal } from '../resources/signals'
 import { gstsServerCardEffectToIcon, gstsServerSetESkillIcon } from '../systems/cardSystem'
 import {
@@ -45,13 +52,19 @@ g.server({
       stage.set('isRestarting', false)
       stage.set('teleportFrom', int(0))
       const player1 = player(1)
-      f.teleportPlayer(player1, vec3([10.49, 3.48, 2.97]), vec3([0, -99.36, 0]))
+      f.teleportPlayer(player1, PlayerSpawnPos, PlayerSpawnRot)
     } else {
       print(str('启动初始化计时器...'))
       print(str('正在显示UI控件...'))
       f.modifyUiControlStatusWithinTheInterfaceLayout(player(1), InitTimer, UIControlGroupStatus.On)
       f.startGlobalTimer(stage, 'InitTimer')
       print(str('初始化计时器已启动，等待倒计时...'))
+    }
+  })
+  .on('whenUiControlGroupIsTriggered', (evt, f) => {
+    if (evt.uiControlGroupIndex === ResetButton) {
+      print(str('手动重置按钮按下'))
+      send(Signal.ShowFloatingInteractionPage, RestartPageIndex)
     }
   })
   .on('whenTheCharacterIsDown', (_evt, f) => {
