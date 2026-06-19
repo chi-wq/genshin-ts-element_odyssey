@@ -94,21 +94,21 @@ export function gstsServerSpawnEnemyWave(currentStage: bigint, f: ServerExecutio
     const flatIdx = f.addition(startIdxVar.value, i)
     debugLogValue('flatIdx:', flatIdx)
     const slotType = gstsServerGetListValue0(
-      battleStageConfig.slotTypes,
+      battleStageConfig.slotType,
       flatIdx,
       battleStageConfig.maxSlotIdx,
       'str',
       f
     )
     const slotPos = gstsServerGetListValue0(
-      battleStageConfig.slotPoss,
+      battleStageConfig.slotPos,
       flatIdx,
       battleStageConfig.maxSlotIdx,
       'int',
       f
     )
     const slotRot = gstsServerGetListValue0(
-      battleStageConfig.slotRots,
+      battleStageConfig.slotRot,
       flatIdx,
       battleStageConfig.maxSlotIdx,
       'int',

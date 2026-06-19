@@ -9,21 +9,18 @@ import { ServerExecutionFlowFunctions } from 'genshin-ts/definitions/nodes' // �
 import { battleStageConfig } from '../config/battleStageConfig'
 import {
   CardPurify,
-  DeckSelectorDuration,
-  DeckSelectorIndex,
-  DeckSelectorSelectMax,
-  DeckSelectorSelectMin,
+  confirmConfig,
+  ConfirmPageIndex,
   maxStage,
   maxStageIdx,
   PlayerSpawnPos2,
   PlayerSpawnRot2,
-  RestartPageIndex,
   StageTimer
 } from '../config/constants'
 import { Signal } from '../resources/signals'
-import { debugLog, debugLogValue, log } from '../utils/logger'
+import { debugLog, debugLogValue } from '../utils/logger'
 import { gstsServerGetListValue } from '../utils/stageUtils'
-import { gstsServerSetESkillIcon, gstsServerShowDeckSelector } from './cardSystem'
+import { gstsServerSetESkillIcon } from './cardSystem'
 import { gstsServerUpdateElementIcons } from './elementSystem'
 import { gstsServerCheckFallenEnemies, gstsServerClearAllEnemies } from './enemySystem'
 import {
@@ -138,7 +135,7 @@ export function gstsServerInitializeStageVariables(
   )
   stage.set(
     'goal',
-    gstsServerGetListValue(battleStageConfig.goals, currentStage, maxStageIdx, 'str', f)
+    gstsServerGetListValue(battleStageConfig.goal, currentStage, maxStageIdx, 'str', f)
   )
   stage.set(
     'tips',
@@ -305,7 +302,7 @@ export function gstsServerStartStageIntervalTimer(f: ServerExecutionFlowFunction
           if (!deadlockShown) {
             debugLog('检测到死锁（maxEnemies=0 且无净化卡牌），请求显示交互页...')
             stage.set('deadlockPageShown', true)
-            send(Signal.ShowFloatingInteractionPage, RestartPageIndex)
+            send(Signal.ShowFloatingInteractionPage, ConfirmPageIndex, confirmConfig.Type1)
           }
         } else {
           let needSpawnEnemyWave = false

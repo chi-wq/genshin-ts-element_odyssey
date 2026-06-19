@@ -1,10 +1,10 @@
 import { CustomPrefab } from '../resources/prefabs'
+import { ConfirmConfig, deriveConfig } from '../types/config'
 import { battleStageConfig } from './battleStageConfig'
 
-// 阶段配置最大索引（根据配置数量自动计算）
-export const maxStageIdx = int(battleStageConfig.size - 1)
 // 获取最大阶段数
-export const maxStage = int(battleStageConfig.size)
+export const maxStage = battleStageConfig.size
+export const maxStageIdx = battleStageConfig.maxIdx
 
 // === 元素常量 ===
 export const Cryo = int(1) // 冰元素
@@ -63,10 +63,20 @@ export const CardPurifyIcon = int(111048) // 净化深渊球图标
 
 // === 悬浮交互页 ===
 // 需在千星奇域编辑器中创建「悬浮交互页」后填入对应索引
-export const RestartPageIndex = int(1073742337)
-export const RestartConfirmItem = int(1073742367) // 重置按钮交互项索引
+export const ConfirmPageIndex = int(1073742337)
+export const ConfirmOKButton = int(1073742367) // 确认对话框的确认按钮交互项索引
+// 确认弹窗配置（同 battleStageConfig 的 stageConfigs 模式）
+// 自动检测各字段数组
+export const confirmConfig = deriveConfig(
+  [
+    { type: 1, text: '元素球不足且无法继续前进，是否重置本关？', okText: '重置', ngText: '取消' },
+    { type: 2, text: '是否重置本关？', okText: '重置', ngText: '取消' }
+  ] as const satisfies ConfirmConfig[],
+  {},
+  undefined,
+  'type' // 指定 type 为主键
+)
 
-// === 元素攻击相关常量 ===
 export const elementAttackPrefabIdValue = prefabId(CustomPrefab.ElementAttack) // 元素攻击预制体ID
 export const monitorElementalReaction = configId(1077936129) // 元素反应监测配置ID
 export const enemyElementAttackPrefabIdValue = prefabId(CustomPrefab.EnemyElementAttack) // 敌方元素攻击预制体ID

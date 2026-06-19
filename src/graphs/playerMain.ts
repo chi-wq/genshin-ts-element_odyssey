@@ -3,12 +3,13 @@ import { ServerExecutionFlowFunctions } from 'genshin-ts/definitions/nodes'
 import { g } from 'genshin-ts/runtime/core'
 
 import {
+  confirmConfig,
+  ConfirmOKButton,
+  ConfirmPageIndex,
   InitTimer,
   PlayerSpawnPos,
   PlayerSpawnRot,
-  ResetButton,
-  RestartConfirmItem,
-  RestartPageIndex
+  ResetButton
 } from '../config/constants'
 import { Signal } from '../resources/signals'
 import { gstsServerCardEffectToIcon, gstsServerSetESkillIcon } from '../systems/cardSystem'
@@ -64,7 +65,7 @@ g.server({
   .on('whenUiControlGroupIsTriggered', (evt, f) => {
     if (evt.uiControlGroupIndex === ResetButton) {
       print(str('手动重置按钮按下'))
-      send(Signal.ShowFloatingInteractionPage, RestartPageIndex)
+      send(Signal.ShowFloatingInteractionPage, ConfirmPageIndex, confirmConfig.Type2)
     }
   })
   .on('whenTheCharacterIsDown', (_evt, f) => {
@@ -75,18 +76,18 @@ g.server({
   })
   .on('whenFloatingInteractionPageIsTriggered', (evt, f) => {
     print(str('交互页交互项触发'))
-    if (evt.floatingInteractionPageIndex === RestartPageIndex) {
+    if (evt.floatingInteractionPageIndex === ConfirmPageIndex) {
       print(str('重置本关交互项触发：'))
       console.log(evt.interactiveItemIndex)
-      if (evt.interactiveItemIndex === RestartConfirmItem) {
+      if (evt.interactiveItemIndex === ConfirmOKButton) {
         print(str('玩家选择重置本关的交互项'))
-        f.closeFloatingInteractionPage(player(1), RestartPageIndex)
+        f.closeFloatingInteractionPage(player(1), ConfirmPageIndex)
         stage.set('deadlockPageShown', false)
         gstsServerRestartStage(f as unknown as ServerExecutionFlowFunctions)
       } else {
         // 取消按钮（item=1）或右上角关闭按钮 → 关页、重置标志
         print(str('取消重置的交互项触发，关闭交互页'))
-        f.closeFloatingInteractionPage(player(1), RestartPageIndex)
+        f.closeFloatingInteractionPage(player(1), ConfirmPageIndex)
         // 检测是否还是死锁状态，如果是的话，不再重复弹“重置本关交互页”
         if (gstsServerCheckDeadlock()) {
           stage.set('deadlockPageShown', true)

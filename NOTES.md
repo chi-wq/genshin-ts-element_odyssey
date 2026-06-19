@@ -75,3 +75,12 @@
 - `gstsServerGetListValue`（1 基）和 `gstsServerGetListValue0`（0 基）读取数据
 - `gstsServerGetListValue0` 内部用 `initLocalVariable`/`setLocalVariable` 包装索引参数
 - 循环内用 `startIdxVar.value + i` 计算展平索引（需先包装 `startIdx`）
+
+## deriveConfig 使用注意
+
+- **模块作用域提取标量**：`confirmConfig.Type1` 等命名标量必须在模块作用域（constants.ts）提取，不能在图回调内直接 `confirmConfig.type[0]`。后者会被 gsts 编译器编译为 `f.getCorrespondingValueFromList()`，但 deriveConfig 生成的数组是普通 JS 数组，不是 gsts list，导致 `Generic parameter not matched` 错误。
+- **keyField 主键标量**：`deriveConfig(data, {}, undefined, 'type')` 按字段值生成命名标量（`Type1`、`Type2`），不依赖数组索引位置。
+- **`gstsServerGetListValue` 的第二参数是索引，不是值**：
+  - `gstsServerGetListValue`（1 基）：`index=1` → 数组索引 `0`
+  - `gstsServerGetListValue0`（0 基）：`index=0` → 数组索引 `0`
+  - `evt.params.Type` 是实际值（如 1、2），不是索引。配合 1 基的 `gstsServerGetListValue`，Type 值自然对应目标条目（Type=1 → index 0）。

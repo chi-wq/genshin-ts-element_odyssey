@@ -5,6 +5,7 @@ import { g } from 'genshin-ts/runtime/core'
 import { battleStageConfig } from '../config/battleStageConfig'
 import {
   CardPurify,
+  confirmConfig,
   elementAttackPrefabIdValue,
   factionEnemy,
   InitTimer,
@@ -195,6 +196,21 @@ g.server({
     print(str('收到信号，唤起悬浮交互页...'))
     print(str('页面索引:'))
     console.log(evt.params.Index)
+    print(str('页面类型:'))
+    console.log(evt.params.Type)
+    // 用 Type 值直接索引文本数组，无需 if-else 分支
+    stage.set(
+      'ConfirmText',
+      gstsServerGetListValue(confirmConfig.text, evt.params.Type, confirmConfig.maxIdx, 'str', f)
+    )
+    stage.set(
+      'ConfirmOKText',
+      gstsServerGetListValue(confirmConfig.okText, evt.params.Type, confirmConfig.maxIdx, 'str', f)
+    )
+    stage.set(
+      'ConfirmNGText',
+      gstsServerGetListValue(confirmConfig.ngText, evt.params.Type, confirmConfig.maxIdx, 'str', f)
+    )
     f.showFloatingInteractionPage(player(1), evt.params.Index, dict('int', 'int_list', null))
     print(str('showFloatingInteractionPage 已调用'))
   })
