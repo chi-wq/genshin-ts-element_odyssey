@@ -1,5 +1,8 @@
 import { ServerExecutionFlowFunctions } from 'genshin-ts/definitions/nodes'
 
+import { NotificationItemId, NotificationQueueIndex } from '../config/constants'
+import { Signal } from '../resources/signals'
+
 /**
  * 从数组中获取指定索引的值（索引从 1 开始，自动钳位到数组范围）
  * 必须在 server ctx 内调用（gstsServer* 函数或 handler 中）
@@ -68,4 +71,19 @@ export function gstsServerGetListValue0(
     idx = maxIdx
   }
   return f.getCorrespondingValueFromList(valueList, idx)
+}
+
+/**
+ * 发送消息到消息队列（封装信号参数，只需传入消息文本）
+ *
+ * @param msg 消息文本
+ */
+export function gstsServerSendNotificationMsg(msg: string): void {
+  send(
+    Signal.UpdateNotificationMsgList,
+    player(1),
+    NotificationQueueIndex,
+    NotificationItemId,
+    str(msg)
+  )
 }

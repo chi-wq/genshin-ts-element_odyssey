@@ -84,3 +84,42 @@
   - `gstsServerGetListValue`（1 基）：`index=1` → 数组索引 `0`
   - `gstsServerGetListValue0`（0 基）：`index=0` → 数组索引 `0`
   - `evt.params.Type` 是实际值（如 1、2），不是索引。配合 1 基的 `gstsServerGetListValue`，Type 值自然对应目标条目（Type=1 → index 0）。
+
+## Struct（结构体）API 限制
+
+- 千星奇域支持自定义结构体（在编辑器中定义字段如 `Msg: string`），每个结构体类型有一个 configId
+- gsts 提供三个 API：`f.assembleStructure()`（拼装）、`f.splitStructure()`（拆分）、`f.modifyStructure()`（修改）
+- 这些 API **不能在 gsts 代码中指定 struct 的 configId**，编译后生成的是空模板节点（ID 300002-300004，无引脚）
+- **结构体的类型绑定和字段赋值必须在千星奇域编辑器中操作**——注入 GIA 后，在编辑器中找到这些节点，手动选择结构体类型，编辑器会自动生成对应的输入/输出引脚
+- `f.refreshNotificationQueue(player, queueIndex, itemId)`（更新消息队列）接受 `itemId: int`，结构体内容在编辑器的消息队列模板中预配置，gsts 只负责按 ID 触发显示
+
+## gstsServerSendNotificationMsg（消息队列通知）
+
+- 功能：封装 `send(Signal.UpdateNotificationMsgList, player(1), queueIndex, itemId, str(msg))`，只需传消息文本
+- 位置：`src/utils/stageUtils.ts`
+- 函数名必须带 `gstsServer` 前缀，因为内部调用 `send()`
+- 消息队列索引和消息项 ID 在 `src/config/constants.ts` 中配置
+- 示例：`gstsServerSendNotificationMsg('使用了【净化】道具')`
+
+## gstsServer 函数前缀规则
+
+- 任何调用 `send()` 或 gsts API 的顶层函数**必须**以 `gstsServer` 开头
+- 否则 gsts 编译器报错：`gstsServer call is only allowed inside g.server().on/onSignal or another gstsServer* function`
+- `gstsServer*` 函数只能有一个尾部 `return`，不能在 `if`/`loop`/`switch` 内部使用 `return`
+
+## 字符串拼接限制
+
+- **图回调内不能使用 `+` 拼接字符串**——gsts 编译器将 `+` 编译为 `f.addition()`（仅支持数值），传字符串会报 `Generic parameter not matched`
+- 错误示例（图回调内）：
+  ```typescript
+  // ❌ '使用了' + itemName + '道具'  →  f.addition("使用了", ...) 报错
+  ```
+- 正确做法：直接传完整字符串常量，或在外层预拼接好再传入
+
+  ```typescript
+  // ✅ 直接传完整字符串
+  gstsServerSendNotificationMsg('使用了【生命回复】道具')
+
+  // ✅ 或在外层（模块作用域）预拼接
+  const msg = '使用了【' + itemName + '】道具' // 模块作用域的 + 是 JS 原生运算
+  ```

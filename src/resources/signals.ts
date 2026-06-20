@@ -17,5 +17,11 @@ export const Signal = {
     ['Type', 'int']
   ]),
   SpawnEnemyWave: defineSignal('SpawnEnemyWave', []),
-  StageReady: defineSignal('StageReady', [])
+  StageReady: defineSignal('StageReady', []),
+  UpdateNotificationMsgList: defineSignal('UpdateNotificationMsgList', [
+    ['Entity', 'entity'],
+    ['NotificationQueueIndex', 'int'],
+    ['NotificationItemId', 'int'],
+    ['Msg', 'str']
+  ])
 } as const

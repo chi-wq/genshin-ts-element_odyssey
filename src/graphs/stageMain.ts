@@ -4,12 +4,18 @@ import { g } from 'genshin-ts/runtime/core'
 
 import { battleStageConfig } from '../config/battleStageConfig'
 import {
+  CardClearEnemies,
+  CardHeal,
   CardPurify,
+  CardShield,
+  CardTime,
   confirmConfig,
   elementAttackPrefabIdValue,
   factionEnemy,
   InitTimer,
   maxStageIdx,
+  NotificationItemId,
+  NotificationQueueIndex,
   PlayerSpawnPos,
   PlayerSpawnRot,
   ResetButton,
@@ -31,7 +37,7 @@ import {
   gstsServerStartStageIntervalTimer,
   gstsServerWaitForPlayerReady
 } from '../systems/stageFlow'
-import { gstsServerGetListValue } from '../utils/stageUtils'
+import { gstsServerGetListValue, gstsServerSendNotificationMsg } from '../utils/stageUtils'
 
 // === StageMain - 阶段主控制 ===
 g.server({
@@ -176,11 +182,13 @@ g.server({
       const cardEffect = stage.get('cardEffect').asType('int')
       if (cardEffect === int(0)) {
         print(str('无卡牌效果可发动'))
+        gstsServerSendNotificationMsg('无道具可用')
         return
       }
       stage.set('cardEffect', int(0))
       gstsServerSetESkillIcon(int(0))
       if (cardEffect === CardPurify) {
+        gstsServerSendNotificationMsg('使用了【净化】道具')
         gstsServerSetOrbCollectable(true, f as unknown as ServerExecutionFlowFunctions)
         stage.set('collectableTimeout', int(5))
       } else {
@@ -189,6 +197,17 @@ g.server({
           evt.params.OwnerEntity as unknown as ReturnType<typeof entity>,
           f as unknown as ServerExecutionFlowFunctions
         )
+        if (cardEffect === CardHeal) {
+          gstsServerSendNotificationMsg('使用了【生命回复】道具')
+        } else if (cardEffect === CardShield) {
+          gstsServerSendNotificationMsg('使用了【护盾】道具')
+        } else if (cardEffect === CardTime) {
+          gstsServerSendNotificationMsg('使用了【增加时间】道具')
+        } else if (cardEffect === CardClearEnemies) {
+          gstsServerSendNotificationMsg('使用了【敌人全灭】道具')
+        } else {
+          gstsServerSendNotificationMsg('使用了未知道具')
+        }
       }
     }
   })

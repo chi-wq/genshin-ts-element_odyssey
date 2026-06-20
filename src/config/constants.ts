@@ -97,5 +97,9 @@ export const PlayerSpawnRot2 = vec3([0, 272.89, 0]) // 备用传送旋转
 export const SafeFallbackPos = vec3([1, 3.5, 0]) // 敌人掉落地板后的回拉位置
 export const SafeFallbackRot = vec3([0, 0, 0]) // 回拉旋转
 
+// === 消息队列 ===
+export const NotificationQueueIndex = int(1073742361) // 消息队列索引
+export const NotificationItemId = int(1) // 消息项ID
+
 // === 调试开关 ===
 export const DEBUG = false // 设为 true 启用调试日志

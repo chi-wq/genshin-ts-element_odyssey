@@ -1,9 +1,17 @@
 import { ServerExecutionFlowFunctions } from 'genshin-ts/definitions/nodes'
 import { g } from 'genshin-ts/runtime/core'
 
-import { enemyElementAttackPrefabIdValue, factionEnemy } from '../config/constants'
+import {
+  Anemo,
+  Dendro,
+  enemyElementAttackPrefabIdValue,
+  factionEnemy,
+  Geo,
+  Light
+} from '../config/constants'
 import { gstsServerApplyBuffEffect, gstsServerUpdateElementIcons } from '../systems/elementSystem'
 import { gstsServerSpawnOrbEnemyAttack } from '../systems/orbSystem'
+import { gstsServerSendNotificationMsg } from '../utils/stageUtils'
 
 // === GetOrb - 元素球获取处理 ===
 g.server({
@@ -45,6 +53,15 @@ g.server({
       gstsServerUpdateElementIcons(prevMain, false, f as unknown as ServerExecutionFlowFunctions)
     } else {
       print(str('收集特殊元素球'))
+      if (element === Anemo) {
+        gstsServerSendNotificationMsg('获得特殊效果：增加时间')
+      } else if (element === Geo) {
+        gstsServerSendNotificationMsg('获得特殊效果：获得护盾')
+      } else if (element === Dendro) {
+        gstsServerSendNotificationMsg('获得特殊效果：恢复生命')
+      } else if (element === Light) {
+        gstsServerSendNotificationMsg('获得特殊效果：全灭敌人')
+      }
       gstsServerApplyBuffEffect(
         element,
         enteringEntity as unknown as ReturnType<typeof entity>,
