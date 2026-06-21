@@ -36,6 +36,12 @@ export const StageTimer = int(1073741860) // 阶段计时器UI
 // === 敌人相关常量 ===
 export const factionEnemy = 4 // 敌方阵营编号
 
+// === 安全生成网格配置（元素球用） ===
+export const EXCLUDE_RADIUS = 3 // 排除距玩家/敌人槽位小于此值的位置
+export const GRID_RANGE = 10 // 网格范围 [-GRID_RANGE, GRID_RANGE]
+export const GRID_STEP = 3 // 网格步长
+export const ORB_SPAWN_Y = 3.2 // 元素球生成高度
+
 // === 元素球相关常量 ===
 export const orbPrefabIdValue = prefabId(CustomPrefab.Orb) // 元素球预制体ID
 export const orbSPPrefabIdValue = prefabId(CustomPrefab.OrbSP) // 特殊元素球预制体ID

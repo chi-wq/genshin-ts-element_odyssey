@@ -8,8 +8,12 @@ const spawnSlotData = [
   { pos: [0, 3.5, 2] as const, rot: [0, 90, 0] as const }
 ] as const
 
+export const spawnSlotSize = spawnSlotData.length
+export const spawnSlotPositions: readonly (readonly [number, number, number])[] = spawnSlotData.map((s) => s.pos)
+export const spawnSlotRotations: readonly (readonly [number, number, number])[] = spawnSlotData.map((s) => s.rot)
+
 export const spawnSlots = {
-  size: spawnSlotData.length,
+  size: spawnSlotSize,
   positions: spawnSlotData.map((s) => vec3(s.pos)),
   rotations: spawnSlotData.map((s) => vec3(s.rot))
 }

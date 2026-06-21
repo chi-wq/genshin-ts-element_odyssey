@@ -1,5 +1,22 @@
 # 仓库笔记
 
+## ⚠️ 编译时 `Math.random()` 无用
+
+- 模块顶层（`const xxx = ...`）的 `Math.random()` 在 `npm run build` 时执行一次，值就**固定在编译产物**里了。每次游戏运行都是同一组"随机"数，毫无随机意义。
+- 正确的运行时随机只能通过 gsts API：`f.getRandomInteger()`、`f.getRandom()` 等，这些才会在游戏运行时生成真随机数。
+- 教训：**凡是要随机的逻辑，必须在节点图运行时通过 `f.*` API 调用，不能在模块顶层的预计算中使用 `Math.random()`。**
+
+## 运行时无放回随机池（dict 方案）
+
+- gsts 的 `f.emptyList` / `f.insertValueIntoList` / `f.removeValueFromList` 在**同一个函数内**可用，但无法跨函数持久化，因为 `f.get` 对列表变量返回的是局部变量包装器而非原始列表。
+- **dict 方案**可以跨函数持久化：
+  1. 声明 graph 变量：`orbPool: dict('int', 'bool', null)`
+  2. 填充：`f.setOrAddKeyValuePairsToDictionary(dict, key, value)`
+  3. 取 keys：`f.getListOfKeysFromDictionary(dict)` → 返回运行时 keys 列表（可用于 `getListLength` / `getCorrespondingValueFromList`）
+  4. 移除：`f.removeKeyValuePairsFromDictionaryByKey(dict, key)`
+- 类型问题：`f.getCorrespondingValueFromList(keys, pick)` 会被编译器推断为 `"entity"`，需要用 `int(...)` 包裹强制转回 `int` 类型。
+- 关键：填充阶段的 `finiteLoop` 顺序填入 keys 不影响随机性，随机性完全来自抽取时的 `f.getRandomInteger`。
+
 ## Type Fixes
 
 - 当 gsts 编译器将事件属性（如 `evt.selectionResultList`）的元素错误推断为 `"entity"` 时，使用 `as unknown as bigint` 类型断言可以覆盖 TypeScript 类型，让编译器正确推断为 `"int"`。

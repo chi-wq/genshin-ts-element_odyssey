@@ -13,6 +13,7 @@ import {
   ConfirmPageIndex,
   maxStage,
   maxStageIdx,
+  ORB_SPAWN_Y,
   PlayerSpawnPos2,
   PlayerSpawnRot2,
   StageTimer
@@ -24,6 +25,7 @@ import { gstsServerSetESkillIcon } from './cardSystem'
 import { gstsServerUpdateElementIcons } from './elementSystem'
 import { gstsServerCheckFallenEnemies, gstsServerClearAllEnemies } from './enemySystem'
 import {
+  gstsServerBuildOrbPool,
   gstsServerClearAllOrbs,
   gstsServerCreateOrbAtRandomPos,
   gstsServerCreateSpecialOrbAtRandomPos,
@@ -143,6 +145,8 @@ export function gstsServerInitializeStageVariables(
   )
   stage.set('maxStage', maxStage) // 存储最大阶段数
   stage.set('cardEffect', int(0)) // 初始化卡牌效果为无
+  // 重建运行时索引字典，每阶段初重置确保不重复
+  gstsServerBuildOrbPool(f as unknown as ServerExecutionFlowFunctions)
   gstsServerSetESkillIcon(int(0)) // 清除E技能图标
 }
 
@@ -161,7 +165,7 @@ export function gstsServerCreateStage(currentStage: bigint, f: ServerExecutionFl
 
     // 在随机位置生成元素球（数量由 orbCount 决定）
     f.finiteLoop(int(0), stage.get('orbCount').asType('int') - int(1), () => {
-      gstsServerCreateOrbAtRandomPos(3.2, f as unknown as ServerExecutionFlowFunctions) // 生成1个元素球
+      gstsServerCreateOrbAtRandomPos(ORB_SPAWN_Y, f as unknown as ServerExecutionFlowFunctions) // 生成1个元素球
     })
 
     // 生成特殊元素球（风/岩/草/光）
@@ -182,7 +186,7 @@ export function gstsServerCreateStage(currentStage: bigint, f: ServerExecutionFl
     if (orbSPCount > int(0)) {
       f.finiteLoop(int(0), orbSPCount - int(1), () => {
         gstsServerCreateSpecialOrbAtRandomPos(
-          3.2,
+          ORB_SPAWN_Y,
           f as unknown as ServerExecutionFlowFunctions,
           fixedSpecialOrb
         )

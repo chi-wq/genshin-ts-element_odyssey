@@ -44,7 +44,8 @@ g.server({
   id: 1073741854,
   name: 'StageMain',
   variables: {
-    challengeState: int(0)
+    challengeState: int(0),
+    orbPool: dict('int', 'bool', null)
   }
 })
   .on('whenEntityIsCreated', (_evt, f) => {
