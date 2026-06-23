@@ -19,6 +19,7 @@ import {
   PlayerSpawnPos,
   PlayerSpawnRot,
   ResetButton,
+  RuleButton,
   StageTimer
 } from '../config/constants'
 import { Signal } from '../resources/signals'
@@ -39,7 +40,7 @@ import {
 } from '../systems/stageFlow'
 import { gstsServerGetListValue, gstsServerSendNotificationMsg } from '../utils/stageUtils'
 
-// === StageMain - 阶段主控制 ===
+// === StageMain - 关卡主控制 ===
 g.server({
   id: 1073741854,
   name: 'StageMain',
@@ -61,7 +62,7 @@ g.server({
       stage.set('teleportFrom', int(0))
       f.teleportPlayer(player1, PlayerSpawnPos, PlayerSpawnRot)
     } else if (evt.timerName === 'StageTimer') {
-      print(str('阶段计时器匹配！'))
+      print(str('关卡计时器匹配！'))
       print(str('挑战失败：超时'))
       stage.set('stageTimerActive', false)
       f.set('challengeState', int(2), true)
@@ -100,24 +101,26 @@ g.server({
     }
   })
   .onSignal(Signal.EnterBattleStage, (_evt, f) => {
-    print(str('收到玩家入场信号！启动阶段计时器...'))
+    print(str('收到玩家入场信号！启动关卡计时器...'))
     f.setPlayerRemainingRevives(player(1), int(0))
     f.allowForbidPlayerToRevive(player(1), false)
     f.modifyUiControlStatusWithinTheInterfaceLayout(player(1), StageTimer, UIControlGroupStatus.On)
     f.startGlobalTimer(stage, 'StageTimer')
     stage.set('stageTimerActive', true)
-    // 显示手动重置按钮
+    // 显示手动重置按钮和游戏规则说明按钮
     f.modifyUiControlStatusWithinTheInterfaceLayout(player(1), ResetButton, UIControlGroupStatus.On)
+    f.modifyUiControlStatusWithinTheInterfaceLayout(player(1), RuleButton, UIControlGroupStatus.On)
     gstsServerStartStageIntervalTimer(f as unknown as ServerExecutionFlowFunctions)
   })
   .onSignal(Signal.PreFightPreparation, (_evt, f) => {
-    print(str('收到玩家退场信号！停止阶段计时器...'))
-    // 隐藏手动重置按钮
+    print(str('收到玩家退场信号！停止关卡计时器...'))
+    // 隐藏手动重置按钮和游戏规则说明按钮
     f.modifyUiControlStatusWithinTheInterfaceLayout(
       player(1),
       ResetButton,
       UIControlGroupStatus.Off
     )
+    f.modifyUiControlStatusWithinTheInterfaceLayout(player(1), RuleButton, UIControlGroupStatus.Off)
     f.modifyUiControlStatusWithinTheInterfaceLayout(player(1), StageTimer, UIControlGroupStatus.Off)
     f.stopGlobalTimer(stage, 'StageTimer')
     const currentStage = stage.get('currentStage').asType('int') + int(1)

@@ -43,8 +43,8 @@ export function gstsServerSettleSuccessStatus(
     // 删除所有元素球
     gstsServerClearAllOrbs(f)
     // 停止全局计时器并隐藏UI
-    f.stopGlobalTimer(stage, 'StageTimer') // 停止阶段计时器
-    stage.set('stageTimerActive', false) // 设置阶段计时器运行标记为false
+    f.stopGlobalTimer(stage, 'StageTimer') // 停止关卡计时器
+    stage.set('stageTimerActive', false) // 设置关卡计时器运行标记为false
     f.modifyUiControlStatusWithinTheInterfaceLayout(player1, StageTimer, UIControlGroupStatus.Off) // 隐藏计时器UI
     if (challengeState === int(1)) {
       // 胜利时
@@ -60,34 +60,34 @@ export function gstsServerSettleSuccessStatus(
   }
 }
 
-// 进入下一阶段
+// 进入下一关卡
 export function gstsServerNextStage(currentStage: bigint, f: ServerExecutionFlowFunctions) {
   if (currentStage !== int(0)) {
-    // 如果当前阶段不为0
+    // 如果当前关卡不为0
     const player1 = player(1) // 获取玩家1
     // 删除所有元素球
     gstsServerClearAllOrbs(f)
     // 停止全局计时器并隐藏UI
-    f.stopGlobalTimer(stage, 'StageTimer') // 停止阶段计时器
-    stage.set('stageTimerActive', false) // 设置阶段计时器运行标记为false
+    f.stopGlobalTimer(stage, 'StageTimer') // 停止关卡计时器
+    stage.set('stageTimerActive', false) // 设置关卡计时器运行标记为false
     f.modifyUiControlStatusWithinTheInterfaceLayout(player1, StageTimer, UIControlGroupStatus.Off) // 隐藏计时器UI
 
     if (currentStage === maxStage) {
-      // 到达最终阶段时
-      debugLog('到达最终阶段，开始结算处理...')
+      // 到达最终关卡时
+      debugLog('到达最终关卡，开始结算处理...')
       gstsServerSettleSuccessStatus(int(1), f as unknown as ServerExecutionFlowFunctions) // 胜利结算
     } else {
-      // 还有下一阶段时
-      debugLog('开始下一阶段...')
+      // 还有下一关时
+      debugLog('开始下一关...')
       f.set('challengeState', int(3), true) // 设置挑战状态为中断
       stage.set('teleportFrom', int(currentStage)) // 记录传送起点
       f.teleportPlayer(player1, PlayerSpawnPos2, PlayerSpawnRot2) // 传送玩家
-      debugLog('玩家已传送至下一阶段')
+      debugLog('玩家已传送至下一关')
     }
   }
 }
 
-// 初始化阶段变量
+// 初始化关卡变量
 export function gstsServerInitializeStageVariables(
   currentStage: bigint,
   f: ServerExecutionFlowFunctions
@@ -110,19 +110,19 @@ export function gstsServerInitializeStageVariables(
   stage.set('collectableTimeout', int(0)) // 初始化拾取超时为0
   stage.set('orbsCollected', int(0)) // 初始化已收集元素球数为0
   stage.set('spawnTimer', int(0)) // 初始化生成计时器为0
-  // 分数跨阶段累积，不重置
+  // 分数跨关卡累积，不重置
   stage.set('reaction', str('')) // 初始化元素反应名为空字符串
   stage.set('reactionColor', str('')) // 初始化元素反应颜色为空字符串
   stage.set('reactionMsg', str('')) // 初始化元素反应消息为空字符串
   stage.set('reactionMsgColor', str('')) // 初始化元素反应消息颜色为空字符串
-  stage.set('stageTimerActive', false) // 初始化阶段计时器运行标记为false
-  // 主/副元素跨阶段继承（不随机重置），更新UI图标
+  stage.set('stageTimerActive', false) // 初始化关卡计时器运行标记为false
+  // 主/副元素跨关卡继承（不随机重置），更新UI图标
   const existingMain = stage.get('mainElement').asType('int')
   const existingSub = stage.get('subElement').asType('int')
   gstsServerUpdateElementIcons(existingMain, true, f)
   gstsServerUpdateElementIcons(existingSub, false, f)
   f.set('challengeState', int(0), true) // 设置挑战状态为进行中
-  // 从 battleStageConfig 获取各阶段配置值
+  // 从 battleStageConfig 获取各关卡配置值
   stage.set(
     'maxEnemies',
     gstsServerGetListValue(battleStageConfig.maxEnemies, currentStage, maxStageIdx, 'int', f)
@@ -143,18 +143,18 @@ export function gstsServerInitializeStageVariables(
     'tips',
     gstsServerGetListValue(battleStageConfig.tips, currentStage, maxStageIdx, 'str', f)
   )
-  stage.set('maxStage', maxStage) // 存储最大阶段数
+  stage.set('maxStage', maxStage) // 存储最大关卡数
   stage.set('cardEffect', int(0)) // 初始化卡牌效果为无
-  // 重建运行时索引字典，每阶段初重置确保不重复
+  // 重建运行时索引字典，每关初重置确保不重复
   gstsServerBuildOrbPool(f as unknown as ServerExecutionFlowFunctions)
   gstsServerSetESkillIcon(int(0)) // 清除E技能图标
 }
 
-// 创建阶段
+// 创建关卡
 export function gstsServerCreateStage(currentStage: bigint, f: ServerExecutionFlowFunctions) {
   if (currentStage !== int(0)) {
-    // 如果当前阶段不为0
-    // 初始化阶段变量（根据阶段设置难度）
+    // 如果当前关卡不为0
+    // 初始化关卡变量（根据关卡设置难度）
     gstsServerInitializeStageVariables(currentStage, f)
 
     // 敌人全灭
@@ -196,7 +196,7 @@ export function gstsServerCreateStage(currentStage: bigint, f: ServerExecutionFl
   return int(0) // 返回值
 }
 
-// 死锁检测：场上无敌人 + 无法再生成敌人 (maxEnemies=0) + 无可用净化卡牌 + 球数不足
+// 死锁检测：场上无敌人 + 该关本来就没有敌人(maxEnemies=0) + 无可用净化卡牌 + 球数不足
 // 返回 true 表示满足死锁条件，false 表示不满足
 export function gstsServerCheckDeadlock() {
   const enemyCount = stage.get('enemyCount').asType('int') // 获取敌人数
@@ -237,9 +237,9 @@ export function gstsServerStartStageIntervalTimer(f: ServerExecutionFlowFunction
     }
   }, 1000)
 
-  // 阶段计时器（每秒执行，也负责敌人生成）
+  // 关卡计时器（每秒执行，也负责敌人生成）
   const stageTimerInterval = setInterval(() => {
-    debugLog('阶段计时器执行')
+    debugLog('关卡计时器执行')
     const challengeState = f.get('challengeState') as unknown as bigint // 获取挑战状态
 
     // 检查是否已失败
@@ -253,7 +253,7 @@ export function gstsServerStartStageIntervalTimer(f: ServerExecutionFlowFunction
       debugLog('挑战已中断，清除计时器')
       clearInterval(stageTimerInterval) // 清除计时器
     } else {
-      // 进行中 - 检查阶段计时器是否失效
+      // 进行中 - 检查关卡计时器是否失效
       const timerActive = stage.get('stageTimerActive').asType('bool') // 获取计时器运行标记
       if (timerActive) {
         // 计时器应该运行时检查剩余时间
@@ -274,7 +274,7 @@ export function gstsServerStartStageIntervalTimer(f: ServerExecutionFlowFunction
         clearInterval(stageTimerInterval) // 清除计时器
       }
       // 检查条件
-      const currentStage = stage.get('currentStage').asType('int') // 获取当前阶段
+      const currentStage = stage.get('currentStage').asType('int') // 获取当前关卡
       const enemyCount = stage.get('enemyCount').asType('int') // 获取敌人数
       const orbsCollected = stage.get('orbsCollected').asType('int') // 获取已收集元素球数
       const orbsRequired = stage.get('orbsRequired').asType('int') // 获取所需元素球数
@@ -287,7 +287,7 @@ export function gstsServerStartStageIntervalTimer(f: ServerExecutionFlowFunction
       if (enemyCount === int(0) && orbsCollected >= orbsRequired) {
         debugLog('挑战成功！')
         f.set('challengeState', int(1), true) // 设置挑战状态为成功
-        gstsServerNextStage(currentStage, f as unknown as ServerExecutionFlowFunctions) // 进入下一阶段
+        gstsServerNextStage(currentStage, f as unknown as ServerExecutionFlowFunctions) // 进入下一关
         clearInterval(stageTimerInterval) // 清除计时器
       } else {
         // 调试：打印为何未通关
@@ -304,7 +304,7 @@ export function gstsServerStartStageIntervalTimer(f: ServerExecutionFlowFunction
           // 避免重复弹窗，只处理一次
           const deadlockShown = stage.get('deadlockPageShown').asType('bool')
           if (!deadlockShown) {
-            debugLog('检测到死锁（maxEnemies=0 且无净化卡牌），请求显示交互页...')
+            debugLog('检测到死锁（本关无敌人且无净化卡牌），请求显示交互页...')
             stage.set('deadlockPageShown', true)
             send(Signal.ShowFloatingInteractionPage, ConfirmPageIndex, confirmConfig.Type1)
           }
@@ -358,8 +358,8 @@ export function gstsServerRestartStage(f: ServerExecutionFlowFunctions) {
   // 删除所有元素球
   gstsServerClearAllOrbs(f)
   // 停止全局计时器并隐藏UI
-  f.stopGlobalTimer(stage, 'StageTimer') // 停止阶段计时器
-  stage.set('stageTimerActive', false) // 设置阶段计时器运行标记为false
+  f.stopGlobalTimer(stage, 'StageTimer') // 停止关卡计时器
+  stage.set('stageTimerActive', false) // 设置关卡计时器运行标记为false
   f.modifyUiControlStatusWithinTheInterfaceLayout(player1, StageTimer, UIControlGroupStatus.Off) // 隐藏计时器UI
   f.set('challengeState', int(3), true)
 

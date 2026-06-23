@@ -28,9 +28,7 @@ for (let i = 0; i < spawnSlotSize; i++) {
 const safeOrbPositions: [number, number][] = []
 for (let x = -GRID_RANGE; x <= GRID_RANGE; x += GRID_STEP) {
   for (let z = -GRID_RANGE; z <= GRID_RANGE; z += GRID_STEP) {
-    const tooClose = excludePoints.some(
-      ([ex, ez]) => Math.hypot(x - ex, z - ez) < EXCLUDE_RADIUS
-    )
+    const tooClose = excludePoints.some(([ex, ez]) => Math.hypot(x - ex, z - ez) < EXCLUDE_RADIUS)
     if (!tooClose) safeOrbPositions.push([x, z])
   }
 }
@@ -38,7 +36,7 @@ for (let x = -GRID_RANGE; x <= GRID_RANGE; x += GRID_STEP) {
 const safeOrbXs: bigint[] = safeOrbPositions.map((p) => int(p[0]))
 const safeOrbZs: bigint[] = safeOrbPositions.map((p) => int(p[1]))
 
-// 运行时构建索引字典 {0:true, 1:true, ..., N-1:true}，每阶段初调用一次
+// 运行时构建索引字典 {0:true, 1:true, ..., N-1:true}，每关初调用一次
 // 每次抽取：取 keys 列表 → 随机抽一个 → 从 dict 移除 → 用该值做位置索引
 // 每关开始时 dict 大小 = 44（全量）；关内每生成一个球 remove 一个 key，逐渐缩小
 // 下一关开始重新填充，又回到 44
@@ -50,7 +48,8 @@ const safeOrbZs: bigint[] = safeOrbPositions.map((p) => int(p[1]))
 export function gstsServerBuildOrbPool(f: ServerExecutionFlowFunctions) {
   const dict = f.get('orbPool') as unknown as Dict<'int', 'bool'> // 取 orbPool dict，setOrAdd 会覆盖已有 key，等价于重置
   const n = f.getListLength(list('int', safeOrbXs)) // 获取安全位置总数（44）
-  f.finiteLoop(int(0), f.subtraction(n, int(1)), (i) => { // 循环 i = 0..43 — 仅用于填充，不影响随机性
+  f.finiteLoop(int(0), f.subtraction(n, int(1)), (i) => {
+    // 循环 i = 0..43 — 仅用于填充，不影响随机性
     f.setOrAddKeyValuePairsToDictionary(dict, i, true) // 填充 {i: true}，i 即位置索引。顺序填入无妨，随机性在抽取时的 f.getRandomInteger
   })
 }

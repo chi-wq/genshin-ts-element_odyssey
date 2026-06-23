@@ -1,15 +1,22 @@
 import { deriveConfig, StageConfig } from '../types/config'
 
+/** 将【xxx】替换为富文本，\n 替换为\\n      */
+const fmt = (s: string) =>
+  s
+    .trim()
+    .replace(/【([^】]+)】/g, '<color=white>【$1】</color>')
+    .replace(/\n/g, '\\n     ')
+
 // 导出各字段数组（自动检测所有字段 + 嵌套数组字段 + segments）
 export const battleStageConfig = deriveConfig(
-  // === 各阶段难度配置 ===
+  // === 各关卡难度配置 ===
   //
   // 每关一个对象，字段说明：
   //   maxEnemies    最大敌人数（达到后不再生成新敌人）
   //   orbsRequired  所需元素球数（收集足够+全灭敌人即通关）
   //   orbCount      元素球生成数量
-  //   fixedCard     指定卡牌选择器里的卡牌序号，设置0的话为随机
-  //   skipCardSelector 是否跳过卡牌选择器（true=跳过）
+  //   fixedCard     指定道具选择器里的道具序号，设置0的话为随机
+  //   skipCardSelector 是否跳过道具选择器（true=跳过）
   //   orbSPCount    特殊元素球数量（0=不生成）
   //   fixedSpecialOrb 固定特殊元素类型（0=随机，5=风/加时，6=岩/护盾，7=草/回血，8=光/全灭）
   //   permanentOrbs 元素球是否永久可见可拾取（true=不会变为深渊球）
@@ -19,7 +26,7 @@ export const battleStageConfig = deriveConfig(
   //                 type 为空字符串时表示无敌人（空槽可省略）
 
   [
-    // === 第1关：学习收集（无卡牌，球直接可见） ===
+    // === 第1关：学习收集（无道具，球直接可见） ===
     {
       maxEnemies: 0,
       orbsRequired: 1,
@@ -29,8 +36,8 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 0,
       fixedSpecialOrb: 0,
       permanentOrbs: true,
-      goal: '触碰发光的元素球通关',
-      tips: '走到发光的球旁边触碰它',
+      goal: fmt('触碰发光的【元素球】通关'),
+      tips: fmt('走到发光的球旁边触碰它'),
       slots: []
     },
     // === 第2关：学习净化（固定 Purify，一个深渊球） ===
@@ -43,8 +50,11 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 0,
       fixedSpecialOrb: 0,
       permanentOrbs: false,
-      goal: '使用卡牌让元素球显现并收集',
-      tips: '按E使用卡牌净化深渊球，然后触碰收集',
+      goal: fmt('使用【道具】让【元素球】显现并收集'),
+      tips: fmt(`
+按元素战技键使用【道具】净化【深渊球】，
+然后触碰收集
+      `),
       slots: []
     },
     // === 第3关：纯战斗（固定 Heal，无需收集球） ===
@@ -57,8 +67,11 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 0,
       fixedSpecialOrb: 0,
       permanentOrbs: false,
-      goal: '消灭所有敌人通关',
-      tips: '长按普攻蓄力松手发射元素攻击，按E使用卡牌回血',
+      goal: fmt('消灭所有【敌人】通关'),
+      tips: fmt(`
+长按普攻击杀【敌人】，
+使用【道具】回血
+      `),
       slots: [{ type: 'hilichurl', pos: 1, rot: 1 }]
     },
     // === 第4关：净化+打怪（固定 Purify，首次实战） ===
@@ -71,11 +84,14 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 0,
       fixedSpecialOrb: 0,
       permanentOrbs: false,
-      goal: '消灭敌人，收集元素球',
-      tips: '按E净化深渊球收集元素，长按普攻攻击敌人',
+      goal: fmt('消灭【敌人】，收集【元素球】'),
+      tips: fmt(`
+使用【道具】净化【深渊球】收集元素，
+然后攻击【敌人】
+      `),
       slots: [{ type: 'hilichurl', pos: 1, rot: 1 }]
     },
-    // === 第5关：学习新卡牌（固定 Heal，更多敌人） ===
+    // === 第5关：学习新道具（固定 Heal，更多敌人） ===
     {
       maxEnemies: 6,
       orbsRequired: 2,
@@ -85,8 +101,8 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 0,
       fixedSpecialOrb: 0,
       permanentOrbs: false,
-      goal: '消灭所有敌人，收集元素球',
-      tips: '长按普攻蓄力松手发射元素攻击，按E使用卡牌回血',
+      goal: fmt('消灭所有【敌人】，收集【元素球】'),
+      tips: fmt('使用【道具】回血'),
       slots: [
         { type: 'hilichurl', pos: 1, rot: 1 },
         { type: 'hilichurl', pos: 2, rot: 2 }
@@ -102,14 +118,17 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 1,
       fixedSpecialOrb: 7,
       permanentOrbs: false,
-      goal: '消灭所有敌人，收集足够的元素球',
-      tips: '按E使用卡牌效果，绿色球可回血',
+      goal: fmt('消灭所有【敌人】，收集足够的【元素球】'),
+      tips: fmt(`
+草色十字可回血，
+集齐【元素球】后全灭【敌人】通关
+      `),
       slots: [
         { type: 'hilichurl', pos: 1, rot: 1 },
         { type: 'pyroSlime', pos: 2, rot: 2 }
       ]
     },
-    // === 第7关：随机卡牌 + 更多敌人 ===
+    // === 第7关：随机道具 + 更多敌人 ===
     {
       maxEnemies: 12,
       orbsRequired: 3,
@@ -119,8 +138,11 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 2,
       fixedSpecialOrb: 0,
       permanentOrbs: false,
-      goal: '消灭所有敌人，收集足够的元素球',
-      tips: '灵活运用攻击和卡牌效果，特殊元素球有不同效果',
+      goal: fmt('消灭所有【敌人】，收集足够的【元素球】'),
+      tips: fmt(`
+灵活运用攻击和【道具】效果，
+【特殊元素球】有不同效果
+      `),
       slots: [
         { type: 'fighter', pos: 1, rot: 1 },
         { type: 'hilichurl', pos: 2, rot: 2 },
@@ -137,8 +159,11 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 2,
       fixedSpecialOrb: 0,
       permanentOrbs: false,
-      goal: '消灭所有敌人，收集足够的元素球',
-      tips: '水火蒸发、冰火融化、冰雷超导——组合元素造成额外伤害',
+      goal: fmt('消灭所有【敌人】，收集足够的【元素球】'),
+      tips: fmt(`
+水火蒸发、冰火融化、冰雷超导
+——组合元素造成额外伤害
+      `),
       slots: [
         { type: 'fighter', pos: 1, rot: 1 },
         { type: 'hydroSamachurl', pos: 2, rot: 2 },
@@ -155,8 +180,11 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 3,
       fixedSpecialOrb: 0,
       permanentOrbs: false,
-      goal: '消灭所有敌人，收集足够的元素球',
-      tips: '遗迹守卫非常危险，优先清理小兵',
+      goal: fmt('消灭所有【敌人】，收集足够的【元素球】'),
+      tips: fmt(`
+遗迹守卫飞弹伤害极高，
+注意躲避或使用护盾【道具】
+      `),
       slots: [
         { type: 'ruinGuard', pos: 1, rot: 1 },
         { type: 'pyroSlime', pos: 2, rot: 2 },

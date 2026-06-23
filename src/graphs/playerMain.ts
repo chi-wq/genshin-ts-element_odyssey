@@ -9,7 +9,12 @@ import {
   InitTimer,
   PlayerSpawnPos,
   PlayerSpawnRot,
-  ResetButton
+  ResetButton,
+  RuleBody,
+  RuleButton,
+  RulePageCloseButton,
+  RulePageIndex,
+  RuleTitle
 } from '../config/constants'
 import { Signal } from '../resources/signals'
 import { gstsServerCardEffectToIcon, gstsServerSetESkillIcon } from '../systems/cardSystem'
@@ -18,6 +23,9 @@ import {
   gstsServerRestartStage,
   gstsServerSettleSuccessStatus
 } from '../systems/stageFlow'
+
+// 游戏规则弹窗关闭按钮索引（需在编辑器中确认）
+const RuleCloseButton = int(1073742399)
 
 // === PlayerMain - 玩家主控制 ===
 g.server({
@@ -66,6 +74,15 @@ g.server({
     if (evt.uiControlGroupIndex === ResetButton) {
       print(str('手动重置按钮按下'))
       send(Signal.ShowFloatingInteractionPage, ConfirmPageIndex, confirmConfig.Type2)
+    } else if (evt.uiControlGroupIndex === RuleButton) {
+      print(str('游戏规则说明按钮按下'))
+      stage.set('PopupTitle', RuleTitle)
+      stage.set('PopupBody', RuleBody)
+      f.showFloatingInteractionPage(player(1), RulePageIndex, dict('int', 'int_list', null))
+      f.showFloatingInteractionPage(player(1), RulePageIndex, dict('int', 'int_list', null))
+    } else if (evt.uiControlGroupIndex === RulePageCloseButton) {
+      print(str('游戏规则说明悬浮交互页关闭'))
+      f.closeFloatingInteractionPage(player(1), RulePageIndex)
     }
   })
   .on('whenTheCharacterIsDown', (_evt, f) => {

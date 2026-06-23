@@ -7,7 +7,7 @@ export interface SlotConfig {
   rot: number
 }
 
-/** 单个阶段配置 */
+/** 单个关卡配置 */
 export interface StageConfig {
   maxEnemies: number
   orbsRequired: number

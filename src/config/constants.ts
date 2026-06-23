@@ -2,7 +2,7 @@ import { CustomPrefab } from '../resources/prefabs'
 import { ConfirmConfig, deriveConfig } from '../types/config'
 import { battleStageConfig } from './battleStageConfig'
 
-// 获取最大阶段数
+// 获取最大关卡数
 export const maxStage = battleStageConfig.size
 export const maxStageIdx = battleStageConfig.maxIdx
 
@@ -31,7 +31,7 @@ export const ElectroSubIcon = int(1073742294) // 副雷图标
 
 // === 计时器UI ID ===
 export const InitTimer = int(1073741874) // 初始化计时器UI
-export const StageTimer = int(1073741860) // 阶段计时器UI
+export const StageTimer = int(1073741860) // 关卡计时器UI
 
 // === 敌人相关常量 ===
 export const factionEnemy = 4 // 敌方阵营编号
@@ -60,7 +60,7 @@ export const DeckSelectorSelectMin = int(1) // 选择数量下限
 export const DeckSelectorSelectMax = int(1) // 选择数量上限
 
 // === E技能图标 ===
-export const ESkillIndex = int(1073742360) // E技能图片控件索引
+export const ESkillIndex = int(1073742360) // 元素战技图片控件索引
 export const CardHealIcon = int(111128) // 生命回复图标
 export const CardShieldIcon = int(111111) // 护盾图标
 export const CardTimeIcon = int(111016) // 增加时间图标
@@ -75,7 +75,12 @@ export const ConfirmOKButton = int(1073742367) // 确认对话框的确认按钮
 // 自动检测各字段数组
 export const confirmConfig = deriveConfig(
   [
-    { type: 1, text: '元素球不足且无法继续前进，是否重置本关？', okText: '重置', ngText: '取消' },
+    {
+      type: 1,
+      text: '元素球不足且无法继续前进，是否重置本关？',
+      okText: '重置',
+      ngText: '取消'
+    },
     { type: 2, text: '是否重置本关？', okText: '重置', ngText: '取消' }
   ] as const satisfies ConfirmConfig[],
   {},
@@ -92,6 +97,15 @@ export const geoShieldConfigId = configId(1077936131) // 单位状态护盾
 
 // === 手动重置按钮 ===
 export const ResetButton = int(1073742372) // 手动重置按钮控件组索引
+
+// === 游戏规则说明按钮 ===
+export const RuleButton = int(1073742397) // 游戏规则说明按钮控件组索引
+// === 游戏规则说明悬浮交互页 ===
+export const RulePageIndex = int(1073742402) // 游戏规则说明悬浮交互页控件组索引
+// === 游戏规则说明悬浮交互页关闭按钮 ===
+export const RulePageCloseButton = int(1073742404) // 游戏规则说明悬浮交互页关闭按钮控件组索引
+// === 游戏规则文本 ===
+export { RuleBody, RuleTitle } from './ruleText'
 
 // === 传送点坐标 ===
 export const PlayerSpawnPos = vec3([10.49, 3.48, 2.97]) // 玩家出生/传送位置
