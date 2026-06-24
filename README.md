@@ -1,24 +1,25 @@
-# genshin-ts-element_odyssey
+# 元素试炼:深渊迴廊
 
-これは [Genshin-TS](https://gsts.moe) を使って作ったゲームプロジェクトです。TypeScript でロジックを書き、ノードグラフにコンパイルしてマップへ注入できます。
+使用 [Genshin-TS](https://gsts.moe) 构建的游戏项目。用 TypeScript 编写逻辑，编译为节点图并注入到地图中。
 
-## クイックスタート
+## 快速开始
 
 ```bash
 npm install
 npm run dev
 ```
 
-ドキュメント: `https://gsts.moe`
+文档: `https://gsts.moe`
 
-## プロジェクト構成
+## 项目结构
 
-- `src/main.ts`: エントリ例（`g.server(...).on(...)`）
-- `gsts.config.ts`: コンパイル/出力の設定
-- `dist/`: ビルド出力（`.gs.ts` / `.json` / `.gia`）
-- `CLAUDE.md` / `AGENTS.md`: AI 協業メモ（先に読む）
+- `src/main.ts`: 入口文件（`g.server(...).on(...)`）
+- `gsts.config.ts`: 编译/输出配置
+- `dist/`: 构建输出（`.gs.ts` / `.json` / `.gia`）
+- `CLAUDE.md` / `AGENTS.md`: AI 协作备忘（优先阅读）
+- `UPDATE.md`: 版本更新对比文档
 
-## 注入（Injection）設定例（任意）
+## 注入配置示例（可选）
 
 ```ts
 import type { GstsConfig } from 'genshin-ts'
@@ -28,23 +29,22 @@ const config: GstsConfig = {
   entries: ['./src'],
   outDir: './dist',
   inject: {
-    gameRegion: 'Global',
-    playerId: 1,
-    mapId: 1073741849,
-    nodeGraphId: 1073741825
+    gameRegion: 'China',
+    playerId: 344728135,
+    mapId: 1073741826
   }
 }
 
 export default config
 ```
 
-メモ:
+说明:
 
-- `npm run maps` は最近保存したマップを列挙し、`mapId` 特定の助けになります。
-- 複数リージョン/複数アカウントを使う場合は `gameRegion` / `playerId` を埋めてください。
-- 注入時にロールバック用バックアップが自動作成されます。
+- `npm run maps` 可列出最近保存的地图，帮助确定 `mapId`。
+- 多区域/多账号使用时请填写 `gameRegion` / `playerId`。
+- 注入时会自动创建回滚备份。
 
-## エントリとイベントの書き方
+## 入口与事件写法
 
 ```ts
 import { g } from 'genshin-ts/runtime/core'
@@ -55,140 +55,140 @@ g.server({ id: 1073741825 }).on('whenEntityIsCreated', (_evt, f) => {
 })
 ```
 
-ポイント:
+要点:
 
-- `id` は注入対象の NodeGraph ID です。同一 ID のエントリはマージされます。
-- イベント名は文字列リテラルで指定します。
-- `f` はノードグラフ関数のエントリです。出力や変数操作に使います。
-- `g.server(...).on(...).onSignal(...)` のようにイベントをチェーンできます。
+- `id` 是注入目标的 NodeGraph ID。相同 ID 的入口会自动合并。
+- 事件名使用字符串字面量指定。
+- `f` 是节点图函数的入口，用于输出和变量操作。
+- `g.server(...).on(...).onSignal(...)` 支持链式调用。
 
-## g.server のオプション（注入安全性）
+## g.server 选项（注入安全性）
 
-よく使うオプション:
+常用选项:
 
-- `id`: 注入対象の NodeGraph ID（注入設定はこの ID と一致させる必要があります）
-- `name`: グラフ表示名（デフォルトはエントリファイル名）
-- `prefix`: `_GSTS_` プレフィックスを自動付与（デフォルト true）
-- `type`: グラフタイプ（デフォルト server/entity）
-- `variables`: グラフ変数を宣言し、`f.get` / `f.set` を有効化
+- `id`: 注入目标的 NodeGraph ID（注入配置需与此 ID 一致）
+- `name`: 图谱显示名（默认使用入口文件名）
+- `prefix`: 自动添加 `_GSTS_` 前缀（默认 true）
+- `type`: 图谱类型（默认 server/entity）
+- `variables`: 声明图谱变量，启用 `f.get` / `f.set`
 
-注入の安全ルール:
+注入安全规则:
 
-- 対象 `id` はマップ内に存在している必要があります。
-- 対象グラフが空、または名前が `_GSTS` で始まらない場合は注入がブロックされます。
-- 仕様を理解している場合は `gsts.config.ts` で `inject.skipSafeCheck = true` を設定できます。
-- 新しいグラフを作成したら、インジェクタが `id` を検出できるようにマップを保存してください。
-- 推奨: 先にグラフをまとめて作成・保存し、その後に 1 回だけコンパイル/注入します。
+- 目标 `id` 必须在地图中存在。
+- 如果目标图谱为空或名称不以 `_GSTS` 开头，注入将被阻止。
+- 确认了解规范后，可在 `gsts.config.ts` 中设置 `inject.skipSafeCheck = true`。
+- 创建新图谱后，请保存地图以便注入器检测到 `id`。
+- 建议：先批量创建并保存图谱，然后一次性编译/注入。
 
-## gsts.config の最適化オプション（デフォルト有効）
+## gsts.config 优化选项（默认启用）
 
-`gsts.config.ts` は `options.optimize` を使用し、デフォルトではすべて有効です:
+`gsts.config.ts` 使用 `options.optimize`，默认全部启用:
 
-- `precompileExpression`: リテラルのみで構成された式を事前計算
-- `removeUnusedNodes`: 未使用の exec/data ノードを削除
-- `timerPool`: `setTimeout` / `setInterval` の名前プールサイズ
-- `timerDispatchAggregate`: タイマー dispatch を集約して複雑度を削減
+- `precompileExpression`: 预计算仅含字面量的表达式
+- `removeUnusedNodes`: 删除未使用的 exec/data 节点
+- `timerPool`: `setTimeout` / `setInterval` 的名称池大小
+- `timerDispatchAggregate`: 聚合 timer dispatch 以降低复杂度
 
-デバッグやグラフ比較が必要な場合は、必要に応じて一時的に無効化してください。
+调试或需要对比图谱时，可临时禁用相关选项。
 
-## 典型的な使い方と制約（AI は必読）
+## 典型用法与约束（AI 必读）
 
-### スコープ分離
+### 作用域分离
 
-- **トップレベル（コンパイル時）**: ファイル読み込み、npm ライブラリ使用、事前計算は OK。ただしここで `g.server` や `gsts` のランタイム API を呼ばないでください。
-- **ノードグラフ（実行時）**: 対応している TS のサブセットのみ使用可。ここで書いたロジックがノードグラフへコンパイルされます。
+- **顶层（编译时）**: 文件读取、npm 库使用、预计算均可。但此处**不要**调用 `g.server` 或 `gsts` 运行时 API。
+- **节点图（运行时）**: 仅可使用支持的 TS 子集。此处编写的逻辑将编译为节点图。
 
-### 制御構文と return
+### 控制结构与 return
 
-- `if/while/switch` の条件は `boolean` 必須です。必要なら `bool(...)` を使ってください。
-- `gstsServer*` 関数は **末尾の単一 `return <expr>` のみ**許可されます。
-- ノードグラフスコープでは再帰、`async/await`、Promise は非対応です。
-- `while(true)` はループ上限で制限されます。代わりにタイマーや明示的カウンタを使ってください。
-- `!` や三項演算子は条件が boolean である必要があります。
+- `if/while/switch` 的条件必须是 `boolean`。必要时使用 `bool(...)`。
+- `gstsServer*` 函数**仅允许末尾单个 `return <expr>`**。
+- 节点图作用域不支持递归、`async/await`、Promise。
+- `while(true)` 有循环上限限制。请使用定时器或显式计数器替代。
+- `!` 和三目运算符的条件必须是 boolean。
 
-### 数値と型
+### 数值与类型
 
-- `number` は **float**、`bigint` は **int** です。
-- 剰余/ビット演算は `bigint` を使ってください。
-- list/dict は同種要素のみ（homogeneous）です。混在型は失敗します。
-- 空配列は型推論できない場合があります。型付きプレースホルダを入れるか `list(...)` を使ってください。
-- `int`, `float`, `vec3`, `configId`, `prefabId`, `entity` などの明示ヘルパーを優先してください。
-- `dict(...)` は読み取り専用 dict を作ります。可変 dict はグラフ変数（`f.get` / `f.set`）で扱ってください。
-- `let` はローカル変数ノードの生成を強制できます。`const` は最適化で直結配線になる場合があります。
+- `number` 是 **float**，`bigint` 是 **int**。
+- 取模/位运算请使用 `bigint`。
+- list/dict 必须是同类元素（homogeneous）。混合类型会导致失败。
+- 空数组可能无法推断类型。请放入类型化占位符或使用 `list(...)`。
+- 优先使用 `int`、`float`、`vec3`、`configId`、`prefabId`、`entity` 等显式辅助函数。
+- `dict(...)` 创建只读 dict。可变 dict 请使用图变量（`f.get` / `f.set`）。
+- `let` 会强制创建局部变量节点。`const` 在优化时可能直接连线。
 
-### グローバル関数/変数チートシート（AI 向け推奨）
+### 全局函数/变量速查表（AI 推荐）
 
-ログ/デバッグ:
+日志/调试:
 
-- `print(str(...))`: 最も安定するログ。
-- `console.log(x)`: **引数は 1 つ בלבד**。自動的に `print(str(...))` に書き換えられます。
-- `f.printString(...)`: 厳密にノードを合わせたい場合の明示呼び出し。
+- `print(str(...))`: 最稳定的日志方式。
+- `console.log(x)`: **仅限 1 个参数**。自动转换为 `print(str(...))`。
+- `f.printString(...)`: 需要精确匹配节点时的显式调用。
 
-型ヘルパー:
+类型辅助:
 
 - `bool(...)` / `int(...)` / `float(...)` / `str(...)`
 - `vec3(...)` / `guid(...)` / `prefabId(...)` / `configId(...)` / `faction(...)` / `entity(...)`
-- `list('int', items)`: explicit list typing (critical for empty arrays).
-- `dict(...)`: read-only dict.
-- `raw(...)`: compiler ignores it; JS native semantics apply.
+- `list('int', items)`: 显式列表类型化（对空数组至关重要）。
+- `dict(...)`: 只读字典。
+- `raw(...)`: 编译器忽略，使用 JS 原生语义。
 
-エンティティ/シーン:
+实体/场景:
 
-- `player(1)`: player entity (starts from 1).
-- `stage` / `level`: stage entity aliases.
-- `self`: current graph entity.
+- `player(1)`: 玩家实体（从 1 开始）。
+- `stage` / `level`: 关卡实体别名。
+- `self`: 当前图谱实体。
 - `GameObject.Find(...)` / `FindWithTag(...)` / `FindByPrefabId(...)`
 
-数学/ベクトル:
+数学/向量:
 
-- `Math.*`: compiled to node graph equivalents in server scope.
-- `Mathf.*` / `Vector3.*` / `Random.*`: Unity-style APIs.
+- `Math.*`: 在服务端作用域中编译为节点图等效函数。
+- `Mathf.*` / `Vector3.*` / `Random.*`: Unity 风格的 API。
 
-シグナル/イベント:
+信号/事件:
 
-- `send('signalName')` with `g.server().onSignal(...)`.
+- `send('signalName')` 配合 `g.server().onSignal(...)` 使用。
 
-タイマー:
+定时器:
 
-- `setTimeout` / `setInterval` / `clearTimeout` / `clearInterval`.
+- `setTimeout` / `setInterval` / `clearTimeout` / `clearInterval`
 
-よく使うメソッド:
+常用方法:
 
-- 多くの配列/文字列メソッド（`map`/`filter`/`find`/`length`）に対応しています。型ヒントに従って使ってください。
+- 支持多数数组/字符串方法（`map`/`filter`/`find`/`length`）。请按类型提示使用。
 
-### ノードグラフ変数（書き込み可能）
+### 节点图变量（可写）
 
 ```ts
 g.server({
   id: 1073741825,
-  variables: { counter: 0n },
+  variables: { counter: 0n }
 }).on('whenEntityIsCreated', (_evt, f) => {
   const v = f.get('counter')
   f.set('counter', v + 1n)
 })
 ```
 
-Notes:
+说明:
 
-- `variables` はグラフ変数を定義し、型付きの `f.get` / `f.set` を有効にします。
-- エンティティ変数は型宣言のみです（`entity(0)` を使います）。
-- `entity(0)` は、エディタ上でエンティティ引数を空に保つためのプレースホルダとしても使えます。
+- `variables` 定义图变量，启用类型化的 `f.get` / `f.set`。
+- 实体变量仅声明类型（使用 `entity(0)`）。
+- `entity(0)` 也可用作占位符，在编辑器中保持实体参数为空。
 
-### タイマー
+### 定时器
 
-- `setTimeout` / `setInterval` を使います（ミリ秒）。
-- コンパイラは名前衝突を避けるためタイマー名プールを構築します。
-- `// @gsts:timerPool=4` でプールサイズを上書きできます（上級）。
-- `setInterval` が 100ms 以下の場合、パフォーマンス警告が出ます。
-- タイマーコールバックは値キャプチャに対応しますが、dict のキャプチャは非対応です。
+- 使用 `setTimeout` / `setInterval`（毫秒）。
+- 编译器会构建定时器名称池以避免名称冲突。
+- `// @gsts:timerPool=4` 可覆盖池大小（高级）。
+- `setInterval` 小于等于 100ms 时会触发性能警告。
+- 定时器回调支持值捕获，但不支持 dict 捕获。
 
-### ネイティブ JS オブジェクト制限
+### 原生 JS 对象限制
 
-- `Object.*` と `JSON.*` は通常ノードグラフスコープで非対応です。
-- トップレベルで事前計算するか、`raw(...)` を使ってください。
-- 文字列連結が失敗する場合は、トップレベルで事前計算するか `str(...)` を使ってください。
+- `Object.*` 和 `JSON.*` 通常在节点图作用域中不支持。
+- 请在顶层预计算或使用 `raw(...)`。
+- 字符串拼接失败时，请在顶层预计算或使用 `str(...)`。
 
-## 再利用関数（gstsServer）
+## 可复用函数（gstsServer）
 
 ```ts
 function gstsServerSum(a: bigint, b: bigint) {
@@ -202,61 +202,61 @@ g.server({ id: 1073741825 }).on('whenEntityIsCreated', (_evt, f) => {
 })
 ```
 
-Rules:
+规则:
 
-- トップレベルに定義します。引数は識別子のみ（分割代入/デフォルト/可変長は不可）。
-- `return` は末尾に 1 回だけ許可されます。
-- 呼び出しは `g.server().on(...)` または他の `gstsServer*` 内からのみ可能です。
-- `gstsServer*` 内では `gsts.f` を直接使えます（`f` を渡す必要はありません）。
+- 定义在顶层。参数只能是标识符（不支持解构/默认值/可变参数）。
+- `return` 仅允许在末尾出现一次。
+- 只能在 `g.server().on(...)` 或其他 `gstsServer*` 内部调用。
+- 在 `gstsServer*` 内部可直接使用 `gsts.f`（无需传递 `f`）。
 
-## 複数エントリとマージ
+## 多入口与合并
 
-- `gsts.config.ts` の `entries` がコンパイル対象ファイルを決めます。
-- 各エントリはグラフを生成し、同一 ID のエントリはマージされます。
-- dev モードでは依存関係の変更に応じて影響範囲のみ再コンパイルされます。
+- `gsts.config.ts` 的 `entries` 决定编译目标文件。
+- 每个入口生成一个图谱，相同 ID 的入口会自动合并。
+- dev 模式下仅重新编译受依赖变化影响的部分。
 
-## 出力とデバッグ
+## 输出与调试
 
-- `.gs.ts`: ノード関数呼び出しに展開した形（意味/呼び出しチェック向け）。
-- `.json`: ノード接続と型チェック用の IR。
-- `.gia`: 注入/インポート用の最終グラフ出力。
+- `.gs.ts`: 展开为节点函数调用形式（用于语义/调用检查）。
+- `.json`: 节点连接与类型检查的中间表示（IR）。
+- `.gia`: 用于注入/导入的最终图谱输出。
 
-## コンパイル時実行の注意
+## 编译时执行注意事项
 
-- コンパイラはすべてのエントリを走査し、`g.server().on(...)` を起点にコンパイルします。
-- トップレベルコードは（インクリメンタルビルドや複数エントリにより）1 回または複数回実行されることがあります。
-- トップレベルでのファイル I/O や乱数利用には注意してください。
-- 一時的に注入を無効化したい場合は、存在しない `id` を設定してください。
-- トップレベルはファイル読み込み、事前計算、手続き生成に向いています。
-- `stage.set` は（実行時の）グローバル変数として使えます。
+- 编译器会遍历所有入口，以 `g.server().on(...)` 为起点进行编译。
+- 顶层代码可能被执行一次或多次（取决于增量构建和多个入口）。
+- 请注意顶层代码中的文件 I/O 和随机数使用。
+- 如需临时禁用注入，可设置一个不存在的 `id`。
+- 顶层适用于文件读取、预计算和过程生成。
+- `stage.set` 可用作（运行时的）全局变量。
 
-## スクリプト
+## 脚本命令
 
-- `npm run build`: フルコンパイル
-- `npm run dev`: インクリメンタルコンパイル（設定されていれば自動注入）
-- `npm run maps`: 最近のマップ一覧
-- `npm run backup`: バックアップディレクトリを開く
-- `npm run typecheck`: TypeScript 型チェック
+- `npm run build`: 完整编译
+- `npm run dev`: 增量编译（如已配置则自动注入）
+- `npm run maps`: 列出最近的地图
+- `npm run backup`: 打开备份目录
+- `npm run typecheck`: TypeScript 类型检查
 - `npm run lint`: ESLint
 
-メモ:
+说明:
 
-- このプロジェクトには独自 ESLint ルールが含まれます。隠れた制約を早めに拾うため `npm run lint` を頻繁に実行してください。
-- `npm run typecheck` はコンパイルエラーになる前に型問題を見つける助けになります。
-- `npm run dev` は `gsts dev` の watch モードのみを実行します。
-- 注入後、変更を反映するにはマップをリロードしてください。
-- 一時的な空マップを用意すると切り替えとリロードが速くなります。
-- リロード前に保存すると注入内容が上書きされる場合があります。必要なら再注入してください。
+- 本项目包含自定义 ESLint 规则。建议频繁执行 `npm run lint` 以尽早发现隐藏约束问题。
+- `npm run typecheck` 有助于在编译报错前发现类型问题。
+- `npm run dev` 仅执行 `gsts dev` 的 watch 模式。
+- 注入后需重新加载地图才能看到变更。
+- 准备一个临时空地图可加快切换和重新加载速度。
+- 重新加载前保存可能会覆盖注入内容，必要时请重新注入。
 
-## FAQ
+## 常见问题
 
-- `npm run maps` が空: エディタで一度マップを保存してから再実行してください。
-- 注入に失敗する: `mapId` / `nodeGraphId` とグラフタイプを確認してください。
-- 型エラー: まず `.value` の使い方と型の整合を確認してください。
+- `npm run maps` 为空: 请在编辑器中保存一次地图后重试。
+- 注入失败: 请检查 `mapId` / `nodeGraphId` 和图谱类型。
+- 类型错误: 请先检查 `.value` 的使用方式和类型一致性。
 
-## 関数/イベント注釈の探し方（AI 向け）
+## 函数/事件注释的查找方式（AI 向）
 
-型ヒントだけでは足りない場合は `node_modules/genshin-ts` を検索してください:
+当类型提示不足时，请在 `node_modules/genshin-ts` 中搜索:
 
-- ノード関数/イベント定義: `node_modules/genshin-ts/dist/src/definitions/`
-- キーワード（イベント名、関数名）でコメントや引数説明を探せます。
+- 节点函数/事件定义: `node_modules/genshin-ts/dist/src/definitions/`
+- 使用关键词（事件名、函数名）搜索注释和参数说明。

@@ -6,3 +6,5 @@ out
 .DS_Store
 *.gia
 .idea
+src/resources/prefabs.ts
+PULL_REQUEST_TEMPLATE.md
