@@ -17,6 +17,7 @@ export interface StageConfig {
   orbSPCount: number
   fixedSpecialOrb: number
   permanentOrbs: boolean
+  infiniteTime: boolean
   goal: string
   tips: string
   slots: SlotConfig[]

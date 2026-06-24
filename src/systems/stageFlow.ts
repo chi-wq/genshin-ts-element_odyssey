@@ -107,6 +107,15 @@ export function gstsServerInitializeStageVariables(
   if (permanentOrbs === int(1)) {
     gstsServerSetOrbCollectable(true, f as unknown as ServerExecutionFlowFunctions)
   }
+  // 读取 infiniteTime 配置：如果为 true，不会触发倒计时失败
+  const infiniteTime = gstsServerGetListValue(
+    battleStageConfig.infiniteTime,
+    currentStage,
+    maxStageIdx,
+    'int',
+    f
+  ) as unknown as bigint
+  f.set('infiniteTime', infiniteTime === int(1), true)
   stage.set('collectableTimeout', int(0)) // 初始化拾取超时为0
   stage.set('orbsCollected', int(0)) // 初始化已收集元素球数为0
   stage.set('spawnTimer', int(0)) // 初始化生成计时器为0

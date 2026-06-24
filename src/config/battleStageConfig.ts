@@ -20,6 +20,7 @@ export const battleStageConfig = deriveConfig(
   //   orbSPCount    特殊元素球数量（0=不生成）
   //   fixedSpecialOrb 固定特殊元素类型（0=随机，5=风/加时，6=岩/护盾，7=草/回血，8=光/全灭）
   //   permanentOrbs 元素球是否永久可见可拾取（true=不会变为深渊球）
+  //   infiniteTime  是否为无限时间（true=没有倒计时限制）
   //   goal          关卡目标描述（显示在UI）
   //   tips          关卡提示（显示在UI）
   //   slots         敌人槽位数组，每项 { type: '敌人名', pos: 位置索引, rot: 旋转索引 }
@@ -36,6 +37,7 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 0,
       fixedSpecialOrb: 0,
       permanentOrbs: true,
+      infiniteTime: true,
       goal: fmt('触碰发光的【元素球】通关'),
       tips: fmt('走到发光的球旁边触碰它'),
       slots: []
@@ -50,6 +52,7 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 0,
       fixedSpecialOrb: 0,
       permanentOrbs: false,
+      infiniteTime: false,
       goal: fmt('使用【道具】让【元素球】显现并收集'),
       tips: fmt(`
 按元素战技键使用【道具】净化【深渊球】，
@@ -67,6 +70,7 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 0,
       fixedSpecialOrb: 0,
       permanentOrbs: false,
+      infiniteTime: false,
       goal: fmt('消灭所有【敌人】通关'),
       tips: fmt(`
 长按普攻击杀【敌人】，
@@ -84,6 +88,7 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 0,
       fixedSpecialOrb: 0,
       permanentOrbs: false,
+      infiniteTime: false,
       goal: fmt('消灭【敌人】，收集【元素球】'),
       tips: fmt(`
 使用【道具】净化【深渊球】收集元素，
@@ -101,6 +106,7 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 0,
       fixedSpecialOrb: 0,
       permanentOrbs: false,
+      infiniteTime: false,
       goal: fmt('消灭所有【敌人】，收集【元素球】'),
       tips: fmt('使用【道具】回血'),
       slots: [
@@ -118,6 +124,7 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 1,
       fixedSpecialOrb: 7,
       permanentOrbs: false,
+      infiniteTime: false,
       goal: fmt('消灭所有【敌人】，收集足够的【元素球】'),
       tips: fmt(`
 草色十字可回血，
@@ -138,6 +145,7 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 2,
       fixedSpecialOrb: 0,
       permanentOrbs: false,
+      infiniteTime: false,
       goal: fmt('消灭所有【敌人】，收集足够的【元素球】'),
       tips: fmt(`
 灵活运用攻击和【道具】效果，
@@ -159,6 +167,7 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 2,
       fixedSpecialOrb: 0,
       permanentOrbs: false,
+      infiniteTime: false,
       goal: fmt('消灭所有【敌人】，收集足够的【元素球】'),
       tips: fmt(`
 水火蒸发、冰火融化、冰雷超导
@@ -180,6 +189,7 @@ export const battleStageConfig = deriveConfig(
       orbSPCount: 3,
       fixedSpecialOrb: 0,
       permanentOrbs: false,
+      infiniteTime: false,
       goal: fmt('消灭所有【敌人】，收集足够的【元素球】'),
       tips: fmt(`
 遗迹守卫飞弹伤害极高，

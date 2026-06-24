@@ -46,6 +46,7 @@ g.server({
   name: 'StageMain',
   variables: {
     challengeState: int(0),
+    infiniteTime: bool(false),
     orbPool: dict('int', 'bool', null)
   }
 })
@@ -101,12 +102,19 @@ g.server({
     }
   })
   .onSignal(Signal.EnterBattleStage, (_evt, f) => {
+    const infiniteTime = f.get('infiniteTime') as unknown as boolean
     print(str('收到玩家入场信号！启动关卡计时器...'))
     f.setPlayerRemainingRevives(player(1), int(0))
     f.allowForbidPlayerToRevive(player(1), false)
-    f.modifyUiControlStatusWithinTheInterfaceLayout(player(1), StageTimer, UIControlGroupStatus.On)
-    f.startGlobalTimer(stage, 'StageTimer')
-    stage.set('stageTimerActive', true)
+    if (!infiniteTime) {
+      f.modifyUiControlStatusWithinTheInterfaceLayout(
+        player(1),
+        StageTimer,
+        UIControlGroupStatus.On
+      )
+      f.startGlobalTimer(stage, 'StageTimer')
+      stage.set('stageTimerActive', true)
+    }
     // 显示手动重置按钮和游戏规则说明按钮
     f.modifyUiControlStatusWithinTheInterfaceLayout(player(1), ResetButton, UIControlGroupStatus.On)
     f.modifyUiControlStatusWithinTheInterfaceLayout(player(1), RuleButton, UIControlGroupStatus.On)
