@@ -7,21 +7,23 @@ This template bootstraps a Genshin-TS project. Maintain it with user workflow an
 - `STRUCTURE.md`: full project structure tree with file annotations.
 - `NOTES.md`: resolved issues, gsts constraints, maintenance notes.
 - `README.md`: full usage flow, constraints, and global function cheat sheet.
+- `UPDATE.md`: version update comparison (main vs add_ver0.04_features).
 
 ## Layout
 
 - `NOTES.md`: resolved issues and gsts constraints reference
 - `STRUCTURE.md`: project tree reference
+- `UPDATE.md`: version diff between main and add_ver0.04_features
 - `src/main.ts`: entry point, imports all graphs
-- `src/config/`: stage config + game constants
-- `src/graphs/`: node graph definitions (one file per graph)
+- `src/config/`: stage config, game constants, rule text, spawn slots
+- `src/graphs/`: node graph definitions (6 files, one per graph)
 - `src/graph-variables/`: node graph variable definitions (dict templates etc.)
-- `src/systems/`: business logic systems
-- `src/utils/`: utility functions
+- `src/systems/`: business logic systems (5 files)
+- `src/utils/`: utility functions (3 files: stageUtils, enemyPrefabs, logger)
 - `src/resources/`: auto-generated (do not edit)
 - `gsts.config.ts`: compile config (entries/outDir/inject)
 - `dist/`: build outputs (generated)
-- `README.md`: user guide
+- `README.md`: user guide (Chinese)
 - `CLAUDE.md`: AI rules
 - `STRUCTURE.md`: project tree reference
 
